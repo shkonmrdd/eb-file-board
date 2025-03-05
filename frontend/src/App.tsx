@@ -8,17 +8,35 @@ function App() {
     return false;
   };
 
-  const handleDrop = (event: DragEvent) => {
+  const handleDrop = async (event: DragEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    
+
     // If you still want to handle files yourself
-    // @ts-expect-error The event.dataTransfer.files property is actually there, but TypeScript doesn't know it.
     const files = event.dataTransfer.files;
     if (files.length > 0) {
       console.log(`Dropped ${files.length} file(s):`, Array.from(files));
+
+      // Send the first dropped file to the backend
+      const formData = new FormData();
+      formData.append("file", files[0]);
+
+      try {
+        const response = await fetch("http://localhost:3001/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          console.log(await response.json());
+        } else {
+          console.error("Failed to upload file");
+        }
+      } catch (error) {
+        console.error(error);
+      }
     }
-    
+
     return false;
   };
 
@@ -26,7 +44,7 @@ function App() {
     // Capture the events at the capture phase, before they reach Excalidraw
     document.addEventListener("dragover", handleDragOver, { capture: true });
     document.addEventListener("drop", handleDrop, { capture: true });
-    
+
     // Clean up
     return () => {
       document.removeEventListener("dragover", handleDragOver, { capture: true });
@@ -44,17 +62,9 @@ function App() {
           display: "flex",
           position: "relative", // Add position to help with drag event handling
         }}
-
         onDrop={handleDrop}
       >
-        <Excalidraw
-          // Use Excalidraw's prop to disable image dropping if available
-          // onPaste={(data) => {
-          //   // Prevent default paste behavior if needed
-          //   return false;
-          // }}
-          // If Excalidraw exposes props to disable file handling, use them here
-        />
+        <Excalidraw />
       </div>
     </>
   );

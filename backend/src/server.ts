@@ -2,8 +2,10 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import cors from 'cors'; // Import the cors package
 
 const app = express();
+app.use(cors()); // Add CORS middleware to enable cross-origin requests
 const port = process.env.PORT || 3001;
 
 // Update log function to use a custom timestamp format
