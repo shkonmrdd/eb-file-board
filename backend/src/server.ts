@@ -16,15 +16,31 @@ const log = (message: string) => {
 
 log('Server is starting...');
 
-// Configure Multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../uploads');
-    fs.mkdirSync(uploadPath, { recursive: true });
-    cb(null, uploadPath);
+    cb(null, path.join(__dirname, '../uploads'));
   },
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${file.originalname}`;
+  filename: async (req, file, cb) => {
+    let uniqueName = `${file.originalname}`;
+    let filePath = path.join(__dirname, '../uploads', uniqueName);
+
+    // Check if the file already exists
+    if (fs.existsSync(filePath)) {
+      const timestamp = Date.now();
+      const ext = path.extname(file.originalname);
+      const nameWithoutExt = path.basename(file.originalname, ext);
+
+      let newUniqueName = `${timestamp}-${nameWithoutExt}${ext}`;
+      let newFilePath = path.join(__dirname, '../uploads', newUniqueName);
+
+      while (fs.existsSync(newFilePath)) {
+        newUniqueName = `${timestamp}-${Math.random().toString(36).substr(2, 9)}-${nameWithoutExt}${ext}`;
+        newFilePath = path.join(__dirname, '../uploads', newUniqueName);
+      }
+
+      fs.renameSync(filePath, newFilePath);
+    }
+
     cb(null, uniqueName);
   }
 });
