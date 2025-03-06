@@ -32,7 +32,6 @@ const MarkdownViewerPage: React.FC = () => {
 
   return (
     <div 
-    className="custom-md-editor-container"
     style={{
       width: "100vw",
       height: "100vh",
