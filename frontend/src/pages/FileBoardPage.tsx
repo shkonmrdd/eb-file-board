@@ -5,6 +5,7 @@ import {
   Excalidraw,
 } from "@excalidraw/excalidraw";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
+import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 
 const socket = io("http://localhost:3001");
 socket.on("connect", () => console.log("Connected to server"));
@@ -24,27 +25,60 @@ function Board() {
 
     function addElementToBoard(
       type: string,
+      link: string,
       data: any,
       pos: { x: number; y: number }
     ) {
-      console.log("TYPE", type);
+      let elements: ExcalidrawElement[] = [];
 
-      const elements = convertToExcalidrawElements([
-        {
-          type: "rectangle",
-          x: pos.x,
-          y: pos.y,
-          label: {
-            text: data,
-            // @ts-expect-error This is correct font
-            fontFamily: "Nunito",
-            fontSize: 20,
-            textAlign: "left",
+      if (["txt", "md"].includes(type)) {
+        elements = convertToExcalidrawElements([
+          {
+            id: "pdf-" + crypto.randomUUID(),
+            type: "rectangle",
+            x: pos.x,
+            y: pos.y,
+            label: {
+              text: data,
+              // @ts-expect-error This is correct font
+              fontFamily: "Nunito",
+              fontSize: 20,
+              textAlign: "left",
+            },
+            width: 1280,
+            height: 800,
           },
-          width: 1280,
-          height: 800,
-        },
-      ]);
+        ]);
+      }
+
+      if (type === "pdf") {
+        console.log("PDF FILE LINK:", link);
+        elements = ([
+          {
+            id: "pdf-" + crypto.randomUUID(),
+            type: "embeddable",
+            x: pos.x,
+            y: pos.y,
+            link: "/pdf/?url=http://localhost:3001" + link,
+            width: 1280,
+            height: 800,
+            roundness: {
+              type: 0,
+              value: 0,
+            },
+            strokeColor: "black",
+            strokeStyle: "solid",
+            backgroundColor: "white",
+            fillStyle: "solid",
+            strokeWidth: 1,
+            opacity: 100,
+            angle: 0,
+            groupIds: [],
+          },
+        ]);
+
+        console.log("PDF ELEMENTS:", elements);
+      }
 
       if (excalidrawAPI) {
         console.log("API is defined");
@@ -68,10 +102,16 @@ function Board() {
         const content = await fetch(`http://localhost:3001${path}`).then(
           (res) => res.text()
         );
-        addElementToBoard(type, content, cursorPositionRef.current);
-      } else {
-        console.error(`Unsupported file type: ${type} for path: ${path}`);
+        addElementToBoard(type, path, content, cursorPositionRef.current);
+        return;
       }
+
+      if (type === "pdf") {
+        addElementToBoard(type, path, null, cursorPositionRef.current);
+        return;
+      }
+
+      console.error(`Unsupported file type: ${type} for path: ${path}`);
     }
 
     socket.on("file-added", handleFileAdded);
@@ -87,7 +127,9 @@ function Board() {
     return false;
   };
 
-  const handleDrop = async (event: React.DragEvent<HTMLDivElement> | DragEvent) => {
+  const handleDrop = async (
+    event: React.DragEvent<HTMLDivElement> | DragEvent
+  ) => {
     event.preventDefault();
     event.stopPropagation();
 
