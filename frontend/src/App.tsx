@@ -11,35 +11,12 @@ import io from "socket.io-client";
 const socket = io("http://localhost:3001");
 socket.on("connect", () => console.log("Connected to server"));
 
-function getCursorPosition(event) {
-  // Get the scroll position of the window
-  const scrollX = window.scrollX || window.pageXOffset;
-  const scrollY = window.scrollY || window.pageYOffset;
-  
-  // Get cursor position relative to the viewport
-  const clientX = event.clientX;
-  const clientY = event.clientY;
-  
-  // Calculate the absolute position in the document by adding scroll offset
-  return {
-    x: clientX + scrollX,
-    y: clientY + scrollY
-  };
-}
-
 
 function App() {
   const [excalidrawAPI, setExcalidrawAPI] =
     useState<ExcalidrawImperativeAPI | null>(null);
   
   const cursorPositionRef = useRef({ x: 0, y: 0 });
-
-  useEffect(() => {
-    document.addEventListener('mousemove', (event) => {
-      const position = getCursorPosition(event);
-      cursorPositionRef.current = position;
-    });
-  }, []);
 
   useEffect(() => {
     if (!excalidrawAPI) {
@@ -66,8 +43,8 @@ function App() {
 
         {
           type: "rectangle",
-          x: 300,
-          y: 290,
+          x: pos.x,
+          y: pos.y,
           // text: data,
           label: {
             text: data,
@@ -114,7 +91,18 @@ function App() {
         content = path; // For images/PDFs, use URL directly
       }
 
-      addElementToBoard(type, content, cursorPositionRef.current);
+      if (!excalidrawAPI) return;
+
+      const appState = excalidrawAPI.getAppState();
+
+      const position = {
+        x: cursorPositionRef.current.x,
+        y: cursorPositionRef.current.y,
+      }
+
+      console.log("zoom", appState.zoom.value)
+
+      addElementToBoard(type, content, position);
     }
 
     socket.on("file-added", handleFileAdded);
@@ -205,6 +193,9 @@ function App() {
             scrollToContent: true,
           }}
           validateEmbeddable={() => true}
+          onPointerUpdate={(event) => {
+            cursorPositionRef.current = event.pointer;
+          }}
         />
       </div>
     </>
