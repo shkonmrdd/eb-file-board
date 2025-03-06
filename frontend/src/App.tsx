@@ -5,11 +5,12 @@ import {
   Excalidraw,
 } from "@excalidraw/excalidraw";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
+import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router";
 
 const socket = io("http://localhost:3001");
 socket.on("connect", () => console.log("Connected to server"));
 
-function App() {
+function Board() {
   const [excalidrawAPI, setExcalidrawAPI] =
     useState<ExcalidrawImperativeAPI | null>(null);
 
@@ -30,20 +31,10 @@ function App() {
       console.log("TYPE", type);
 
       const elements = convertToExcalidrawElements([
-        // {
-        //   type: "rectangle",
-        //   x: 300,
-        //   y: 290,
-        //   label: {
-        //     text: data,
-        //   },
-        // },
-
         {
           type: "rectangle",
           x: pos.x,
           y: pos.y,
-          // text: data,
           label: {
             text: data,
             // @ts-expect-error This is correct font
@@ -51,8 +42,6 @@ function App() {
             fontSize: 20,
             textAlign: "left",
           },
-          // fontFamily: "Nunito",
-          // fontSize: 18,
           width: 1280,
           height: 800,
         },
@@ -180,6 +169,24 @@ function App() {
         />
       </div>
     </>
+  );
+}
+
+function DocViewer() {
+  const params = useParams();
+  console.log(params.filename);
+  return <>Docs Viewer</>
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+    <Routes>
+      <Route path="/" element={<Board />} />
+      <Route path="/doc/:filename" element={<DocViewer />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  </BrowserRouter>
   );
 }
 
