@@ -85,7 +85,7 @@ function App() {
         fillStyle: "solid", // Add this property
         strokeStyle: "solid", // Add this property
         roundness: null, // or provide a value like { type: RoundnessType; value?: number; }
-        // opacity: 1.0, // Default to full opacity unless specified otherwise
+        opacity: 100, // 100%
         seed: Math.floor(Math.random() * 1000),
         version: 0,
         versionNonce: Date.now(),
