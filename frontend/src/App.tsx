@@ -1,4 +1,5 @@
 import { Excalidraw } from "@excalidraw/excalidraw";
+import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { useEffect } from "react";
 
 function App() {
@@ -47,10 +48,26 @@ function App() {
 
     // Clean up
     return () => {
-      document.removeEventListener("dragover", handleDragOver, { capture: true });
+      document.removeEventListener("dragover", handleDragOver, {
+        capture: true,
+      });
       document.removeEventListener("drop", handleDrop, { capture: true });
     };
   }, []);
+
+  const rectangle: ExcalidrawElement = {
+    id: "rectangle-1",
+    type: "rectangle",
+    x: 300,
+    y: 300,
+    width: 100,
+    height: 50,
+    strokeColor: "#000000",
+    backgroundColor: "#cccccc",
+    strokeWidth: 2,
+    roughness: 1,
+    seed: Math.floor(Math.random() * 1000),
+  };
 
   return (
     <>
@@ -64,7 +81,13 @@ function App() {
         }}
         onDrop={handleDrop}
       >
-        <Excalidraw />
+        <Excalidraw
+          initialData={{
+            elements: [rectangle],
+            appState: { zenModeEnabled: true, viewBackgroundColor: "#ccc" },
+            scrollToContent: true,
+          }}
+        />
       </div>
     </>
   );
