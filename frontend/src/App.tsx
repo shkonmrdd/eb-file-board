@@ -1,5 +1,3 @@
-// import { Excalidraw } from "@excalidraw/excalidraw";
-// import { ExcalidrawElement, ExcalidrawRectangleElement, ExcalidrawTextElement } from "@excalidraw/excalidraw/types/element/types";
 import { useEffect, useState } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
