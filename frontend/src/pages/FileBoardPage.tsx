@@ -32,36 +32,33 @@ function Board() {
       let elements: ExcalidrawElement[] = [];
 
       if (["txt", "md"].includes(type)) {
-        elements = convertToExcalidrawElements([
-          {
-            id: "pdf-" + crypto.randomUUID(),
-            type: "rectangle",
-            x: pos.x,
-            y: pos.y,
-            label: {
-              text: data,
-              // @ts-expect-error This is correct font
-              fontFamily: "Nunito",
-              fontSize: 20,
-              textAlign: "left",
-            },
-            width: 1280,
-            height: 800,
-          },
-        ]);
-      }
+        // elements = convertToExcalidrawElements([
+        //   {
+        //     id: "pdf-" + crypto.randomUUID(),
+        //     type: "rectangle",
+        //     x: pos.x,
+        //     y: pos.y,
+        //     label: {
+        //       text: data,
+        //       // @ts-expect-error This is correct font
+        //       fontFamily: "Nunito",
+        //       fontSize: 20,
+        //       textAlign: "left",
+        //     },
+        //     width: 1280,
+        //     height: 800,
+        //   },
+        // ]);
 
-      if (type === "pdf") {
-        console.log("PDF FILE LINK:", link);
         elements = ([
           {
             id: "pdf-" + crypto.randomUUID(),
             type: "embeddable",
             x: pos.x,
             y: pos.y,
-            link: "/pdf/?url=http://localhost:3001" + link,
-            width: 1280,
-            height: 800,
+            link: "/md/?url=http://localhost:3001" + link,
+            width: 1600,
+            height: 1450,
             roundness: {
               type: 0,
               value: 0,
@@ -76,8 +73,32 @@ function Board() {
             groupIds: [],
           },
         ]);
+      }
 
-        console.log("PDF ELEMENTS:", elements);
+      if (type === "pdf") {
+        elements = ([
+          {
+            id: "pdf-" + crypto.randomUUID(),
+            type: "embeddable",
+            x: pos.x,
+            y: pos.y,
+            link: "/pdf/?url=http://localhost:3001" + link,
+            width: 1024,
+            height: 1450,
+            roundness: {
+              type: 0,
+              value: 0,
+            },
+            strokeColor: "black",
+            strokeStyle: "solid",
+            backgroundColor: "white",
+            fillStyle: "solid",
+            strokeWidth: 1,
+            opacity: 100,
+            angle: 0,
+            groupIds: [],
+          },
+        ]);
       }
 
       if (excalidrawAPI) {

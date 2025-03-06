@@ -38,7 +38,7 @@ const MarkdownViewerPage: React.FC = () => {
       <MDEditor
         value={value}
         onChange={(value) => setValue(value || "")}
-        preview="edit"
+        preview="live"
         style={{
           minHeight: "calc(100vh - 1px)", // Yeah, I know
         }}
