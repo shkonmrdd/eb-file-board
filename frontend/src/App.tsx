@@ -1,16 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import io from "socket.io-client";
 import {
   convertToExcalidrawElements,
   Excalidraw,
 } from "@excalidraw/excalidraw";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
-import {
-  ExcalidrawElement,
-  ExcalidrawRectangleElement,
-  ExcalidrawTextContainer,
-} from "@excalidraw/excalidraw/types/element/types";
 
-import io from "socket.io-client";
 const socket = io("http://localhost:3001");
 socket.on("connect", () => console.log("Connected to server"));
 
