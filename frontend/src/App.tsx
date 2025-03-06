@@ -98,7 +98,6 @@ function App() {
       } else {
         console.error("Excalidraw API is not defined");
         return;
-        x;
       }
 
       // excalidrawAPI?.addElements([element]);
@@ -184,63 +183,6 @@ function App() {
       document.removeEventListener("drop", handleDrop, { capture: true });
     };
   }, []);
-
-  useEffect(() => {
-    if (!excalidrawAPI) {
-      console.log("no api");
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      console.log("trying to add elements");
-
-      // Create elements with dynamic IDs and references
-      const rectangle: ExcalidrawRectangleElement = {
-        id: "rectangle-1",
-        type: "rectangle",
-        x: 300,
-        y: 300,
-        width: 100,
-        height: 50,
-        strokeColor: "#000000",
-        backgroundColor: "#cccccc",
-        strokeWidth: 2,
-        roughness: 1,
-        fillStyle: "solid", // Add this property
-        strokeStyle: "solid", // Add this property
-        roundness: null, // or provide a value like { type: RoundnessType; value?: number; }
-        opacity: 100, // 100%
-        seed: Math.floor(Math.random() * 1000),
-        version: 0,
-        versionNonce: Date.now(),
-        isDeleted: false,
-        groupIds: [],
-        frameId: null,
-        boundElements: null,
-        updated: Date.now(),
-        link: null,
-        locked: false,
-        angle: 0,
-      };
-
-      // const textElement: ExcalidrawTextElement = {
-      //   id: textId,
-      //   type: "text",
-      //   x: rectangle.x + (rectangle.width / 2), // Centered horizontally
-      //   y: rectangle.y + 30, // Offset from top of rectangle
-      //   text: "Dynamic Text Here!",
-      //   containerId: rectId, // Links to the rectangle's ID
-      //   textAlign: "center",
-      // };
-
-      // Update scene with both elements
-      excalidrawAPI.updateScene({
-        elements: [rectangle],
-      });
-    }, 3000);
-
-    return () => clearTimeout(timer); // Cleanup on unmount
-  }, [excalidrawAPI]); // Dependency triggers effect when API is ready
 
   console.log("APP STATE", excalidrawAPI?.getAppState());
 
