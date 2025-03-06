@@ -87,7 +87,7 @@ function Board() {
     return false;
   };
 
-  const handleDrop = async (event: DragEvent) => {
+  const handleDrop = async (event: React.DragEvent<HTMLDivElement> | DragEvent) => {
     event.preventDefault();
     event.stopPropagation();
 
