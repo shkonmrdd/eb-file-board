@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Excalidraw } from "@excalidraw/excalidraw";
+import { convertToExcalidrawElements, Excalidraw } from "@excalidraw/excalidraw";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 import {
   ExcalidrawElement,
@@ -53,45 +53,35 @@ function App() {
       data: any,
       pos: { x: number; y: number }
     ) {
-      // Create element based on type
-      // const element = {
-      //   id: crypto.randomUUID(),
-      //   type: "custom", // Use Excalidraw's custom element feature
-      //   x: pos.x,
-      //   y: pos.y,
-      //   width: 200,
-      //   height: 300,
-      //   version: 1,
-      //   data: { content: data },
-      // };
-      const rectangle: ExcalidrawTextContainer = {
-        id: "rectangle-2",
-        type: "rectangle",
-        x: pos.x,
-        y: pos.y,
-        width: 100,
-        height: 50,
-        strokeColor: "#000000",
-        backgroundColor: "#cccccc",
-        strokeWidth: 2,
-        roughness: 1,
-        fillStyle: "solid", // Add this property
-        strokeStyle: "solid", // Add this property
-        roundness: null, // or provide a value like { type: RoundnessType; value?: number; }
-        opacity: 100, // 100%
-        seed: Math.floor(Math.random() * 1000),
-        version: 0,
-        versionNonce: Date.now(),
-        isDeleted: false,
-        groupIds: [],
-        frameId: null,
-        boundElements: null,
-        updated: Date.now(),
-        link: null,
-        locked: false,
-        angle: 0,
-        // text: data,
-      };
+    
+      const elements = convertToExcalidrawElements([
+        // {
+        //   type: "rectangle",
+        //   x: 300,
+        //   y: 290,
+        //   label: {
+        //     text: data,
+        //   },
+        // },
+
+        {
+          type: "rectangle",
+          x: 300,
+          y: 290,
+          // text: data,
+          label: {
+            text: data,
+            // @ts-expect-error This is correct font
+            fontFamily: "Nunito",
+            fontSize: 20,
+            textAlign: "left",
+          },
+          // fontFamily: "Nunito",
+          // fontSize: 18,
+          width: 1280,
+          height: 800,
+        },
+      ]);
 
       if (excalidrawAPI) {
         console.log("API is defined");
@@ -101,8 +91,10 @@ function App() {
       }
 
       // excalidrawAPI?.addElements([element]);
+      const oldElements = excalidrawAPI?.getSceneElements() ?? [];
+      
       excalidrawAPI?.updateScene({
-        elements: [rectangle],
+        elements: [...elements, ...oldElements],
       });
     }
 
@@ -186,6 +178,8 @@ function App() {
 
   console.log("APP STATE", excalidrawAPI?.getAppState());
 
+  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
   return (
     <>
       <div
@@ -202,10 +196,11 @@ function App() {
           excalidrawAPI={setExcalidrawAPI}
           initialData={{
             appState: {
-              zenModeEnabled: true,
-              gridSize: 16,
+              zenModeEnabled: false,
+              // gridSize: 16,
               // viewBackgroundColor: "#f0f0f0",
-              theme: "dark",
+              // Calculate based on the system setting
+              theme: isDarkMode ? "dark" : "light",
             },
             scrollToContent: true,
           }}

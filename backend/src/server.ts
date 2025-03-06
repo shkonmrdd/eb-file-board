@@ -93,7 +93,7 @@ app.post("/upload", upload.single("file"), (req, res): void => {
   });
 });
 
-watcher.on("change", (filePath) => {
+watcher.on("add", (filePath) => {
   const publicPath = `/files/${path.basename(filePath)}`;
   io.emit("file-added", {
     path: publicPath,
