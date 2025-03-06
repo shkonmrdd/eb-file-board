@@ -10,10 +10,9 @@ import {
   Navigate,
   Route,
   Routes,
-  useLocation,
 } from "react-router";
 
-import PDFViewer from "./components/LocalPDFViewer";
+import PDFViewerPage from "./pages/PDFViewerPage";
 
 const socket = io("http://localhost:3001");
 socket.on("connect", () => console.log("Connected to server"));
@@ -180,33 +179,12 @@ function Board() {
   );
 }
 
-
-function DocViewer() {
-  // const params = useParams();
-  // console.log(params.url);
-  const location = useLocation();
-  const urlParams = new URLSearchParams(location.search);
-  const url = urlParams.get("url") ?? "";
-  console.log(url);
-
-  return (
-    <div
-    style={{
-      width: "100vw",
-      height: "100vh",
-    }}
-    >
-      <PDFViewer url={url} showControls={true} />
-    </div>
-  );
-}
-
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Board />} />
-        <Route path="/doc/*" element={<DocViewer />} />
+        <Route path="/pdf/*" element={<PDFViewerPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
