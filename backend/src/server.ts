@@ -28,7 +28,7 @@ const log = (message: string) => {
 
 log("Server is starting...");
 
-const watcher = chokidar.watch("uploads/", { persistent: true });
+const watcher = chokidar.watch("uploads/", { persistent: true, ignoreInitial: true });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
