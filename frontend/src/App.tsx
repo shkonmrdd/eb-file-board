@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { convertToExcalidrawElements, Excalidraw } from "@excalidraw/excalidraw";
+import {
+  convertToExcalidrawElements,
+  Excalidraw,
+} from "@excalidraw/excalidraw";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 import {
   ExcalidrawElement,
@@ -11,11 +14,10 @@ import io from "socket.io-client";
 const socket = io("http://localhost:3001");
 socket.on("connect", () => console.log("Connected to server"));
 
-
 function App() {
   const [excalidrawAPI, setExcalidrawAPI] =
     useState<ExcalidrawImperativeAPI | null>(null);
-  
+
   const cursorPositionRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -30,7 +32,8 @@ function App() {
       data: any,
       pos: { x: number; y: number }
     ) {
-    
+      console.log("TYPE", type);
+
       const elements = convertToExcalidrawElements([
         // {
         //   type: "rectangle",
@@ -67,9 +70,8 @@ function App() {
         return;
       }
 
-      // excalidrawAPI?.addElements([element]);
       const oldElements = excalidrawAPI?.getSceneElements() ?? [];
-      
+
       excalidrawAPI?.updateScene({
         elements: [...elements, ...oldElements],
       });
@@ -78,31 +80,15 @@ function App() {
     async function handleFileAdded(data: { path: string; type: string }) {
       console.log("A FILE ADDED");
       const { path, type } = data;
-      let content;
 
-      // Determine element type and content
       if (["md", "txt"].includes(type)) {
-        content = await fetch(`http://localhost:3001${path}`).then((res) =>
+        const content = await fetch(`http://localhost:3001${path}`).then((res) =>
           res.text()
         );
-        console.log(content);
-        // addElementToBoard(type, content, {x: 300, y: 300});
+        addElementToBoard(type, content, cursorPositionRef.current);
       } else {
-        content = path; // For images/PDFs, use URL directly
+        console.error(`Unsupported file type: ${type} for path: ${path}`);
       }
-
-      if (!excalidrawAPI) return;
-
-      const appState = excalidrawAPI.getAppState();
-
-      const position = {
-        x: cursorPositionRef.current.x,
-        y: cursorPositionRef.current.y,
-      }
-
-      console.log("zoom", appState.zoom.value)
-
-      addElementToBoard(type, content, position);
     }
 
     socket.on("file-added", handleFileAdded);
@@ -166,7 +152,7 @@ function App() {
 
   console.log("APP STATE", excalidrawAPI?.getAppState());
 
-  const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
   return (
     <>
