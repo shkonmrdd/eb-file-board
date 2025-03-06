@@ -1,5 +1,5 @@
 import { Excalidraw } from "@excalidraw/excalidraw";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import { ExcalidrawElement, ExcalidrawRectangleElement, ExcalidrawTextElement } from "@excalidraw/excalidraw/types/element/types";
 import { useEffect } from "react";
 
 function App() {
@@ -55,7 +55,7 @@ function App() {
     };
   }, []);
 
-  const rectangle: ExcalidrawElement = {
+  const rectangle: ExcalidrawRectangleElement = {
     id: "rectangle-1",
     type: "rectangle",
     x: 300,
@@ -66,7 +66,37 @@ function App() {
     backgroundColor: "#cccccc",
     strokeWidth: 2,
     roughness: 1,
+    fillStyle: "solid", // Add this property
+    strokeStyle: "solid", // Add this property
+    roundness: null, // or provide a value like { type: RoundnessType; value?: number; }
+    // opacity: 1.0, // Default to full opacity unless specified otherwise
     seed: Math.floor(Math.random() * 1000),
+    version: 0,
+    versionNonce: Date.now(),
+    isDeleted: false,
+    groupIds: [],
+    frameId: null,
+    boundElements: null,
+    updated: Date.now(),
+    link: null,
+    locked: false,
+    angle: 0,
+  };
+  const textElement: ExcalidrawTextElement = {
+    id: "text-1",
+    type: "text",
+    x: 300, // Position relative to the rectangle
+    y: 310, // Slightly offset from top of rectangle for visibility
+    width: 100, // Optional, depending on how you want text to be rendered
+    height: 20, // Optional, adjust as needed based on content size
+    fontSize: 12,
+    text: "Your Text Here ",
+    baseline: 1.2 * 12, // Typically lineHeight * (fontSize / 2)
+    textAlign: "center" as const, // Ensure this matches valid values
+    verticalAlign: "middle" as const, // Ensure this is correct too
+    containerId: rectangle.id,
+    // originalText: "Your Text Here ",
+    lineHeight: 1.4 as any, 
   };
 
   return (
@@ -83,7 +113,7 @@ function App() {
       >
         <Excalidraw
           initialData={{
-            elements: [rectangle],
+            elements: [rectangle, textElement],
             appState: { zenModeEnabled: true, viewBackgroundColor: "#ccc" },
             scrollToContent: true,
           }}
