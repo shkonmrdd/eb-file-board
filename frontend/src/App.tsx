@@ -37,7 +37,6 @@ function App() {
   useEffect(() => {
     document.addEventListener('mousemove', (event) => {
       const position = getCursorPosition(event);
-      console.log(`Cursor position: x=${position.x}, y=${position.y}`);
       cursorPositionRef.current = position;
     });
   }, []);
@@ -268,6 +267,7 @@ function App() {
             },
             scrollToContent: true,
           }}
+          validateEmbeddable={() => true}
         />
       </div>
     </>
