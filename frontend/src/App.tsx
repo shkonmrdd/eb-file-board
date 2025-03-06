@@ -6,6 +6,7 @@ import {
 } from "react-router";
 
 import PDFViewerPage from "./pages/PDFViewerPage";
+import MarkdownViewerPage from "./pages/MarkdownViewerPage";
 import Board from "./pages/FileBoardPage";
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Board />} />
         <Route path="/pdf/*" element={<PDFViewerPage />} />
+        <Route path="/md/*" element={<MarkdownViewerPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
