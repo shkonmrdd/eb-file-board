@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import {
-  convertToExcalidrawElements,
+  // convertToExcalidrawElements,
   Excalidraw,
 } from "@excalidraw/excalidraw";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
@@ -31,32 +31,40 @@ function Board() {
     ) {
       let elements: ExcalidrawElement[] = [];
 
-      if (["txt", "md"].includes(type)) {
-        // elements = convertToExcalidrawElements([
-        //   {
-        //     id: "pdf-" + crypto.randomUUID(),
-        //     type: "rectangle",
-        //     x: pos.x,
-        //     y: pos.y,
-        //     label: {
-        //       text: data,
-        //       // @ts-expect-error This is correct font
-        //       fontFamily: "Nunito",
-        //       fontSize: 20,
-        //       textAlign: "left",
-        //     },
-        //     width: 1280,
-        //     height: 800,
-        //   },
-        // ]);
-
+      if (["txt"].includes(type)) {
         elements = ([
           {
             id: "pdf-" + crypto.randomUUID(),
             type: "embeddable",
             x: pos.x,
             y: pos.y,
-            link: "/md/?url=http://localhost:3001" + link,
+            link: "/md/?url=http://localhost:3001" + link + "&preview=edit",
+            width: 1024,
+            height: 1450,
+            roundness: {
+              type: 0,
+              value: 0,
+            },
+            strokeColor: "black",
+            strokeStyle: "solid",
+            backgroundColor: "white",
+            fillStyle: "solid",
+            strokeWidth: 1,
+            opacity: 100,
+            angle: 0,
+            groupIds: [],
+          },
+        ]);
+      }
+
+      if (["md"].includes(type)) {
+        elements = ([
+          {
+            id: "pdf-" + crypto.randomUUID(),
+            type: "embeddable",
+            x: pos.x,
+            y: pos.y,
+            link: "/md/?url=http://localhost:3001" + link + "&preview=live",
             width: 1600,
             height: 1450,
             roundness: {

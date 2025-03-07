@@ -2,16 +2,18 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router";
 import MDEditor from "@uiw/react-md-editor";
 
+const getUrlParameter = (name: string): string | null => {
+  const urlParams = new URLSearchParams(location.search);
+  return urlParams.get(name) ?? "";
+};
+
 const MarkdownViewerPage: React.FC = () => {
   const params = useParams();
   const [value, setValue] = useState<string>("");
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchData = async (url: string) => {
       try {
-        const urlParams = new URLSearchParams(location.search);
-        const url = urlParams.get("url") ?? "";
-
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error("File not found");
@@ -25,8 +27,17 @@ const MarkdownViewerPage: React.FC = () => {
       }
     };
 
-    fetchData();
+    const url = getUrlParameter("url");
+    if (url) fetchData(url);
   }, [params]);
+
+  const previewParameter = getUrlParameter("preview");
+
+  const previewMode = (() => {
+    if (previewParameter === "edit") return "edit";
+    if (previewParameter === "live") return "live";
+    return "preview";
+  })();
 
   return (
     <div
@@ -38,7 +49,7 @@ const MarkdownViewerPage: React.FC = () => {
       <MDEditor
         value={value}
         onChange={(value) => setValue(value || "")}
-        preview="live"
+        preview={previewMode}
         style={{
           minHeight: "calc(100vh - 1px)", // Yeah, I know
         }}
