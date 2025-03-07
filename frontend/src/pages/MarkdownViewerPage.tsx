@@ -51,7 +51,7 @@ const MarkdownViewerPage: React.FC = () => {
         onChange={(value) => setValue(value || "")}
         preview={previewMode}
         style={{
-          minHeight: "calc(100vh - 1px)", // Yeah, I know
+          minHeight: "calc(100vh - 65px)", // Yeah, I know
         }}
       />
       {/* <MDEditor.Markdown source={value} style={{ whiteSpace: 'pre-wrap' }} /> */}
