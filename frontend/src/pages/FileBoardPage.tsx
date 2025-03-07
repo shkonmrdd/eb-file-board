@@ -26,21 +26,28 @@ function Board() {
     function addElementToBoard(
       type: string,
       link: string,
-      data: any,
       pos: { x: number; y: number }
     ) {
+      if (!["txt", "md", "pdf"].includes(type)) {
+        console.error("Invalid file type");
+        return;
+      }
+
       let elements: ExcalidrawElement[] = [];
+      const base = {
+        id: crypto.randomUUID(),
+        x: pos.x,
+        y: pos.y,
+        width: 1024,
+        height: 1450,
+      };
 
       if (["txt"].includes(type)) {
         elements = ([
           {
-            id: "pdf-" + crypto.randomUUID(),
+            ...base,
             type: "embeddable",
-            x: pos.x,
-            y: pos.y,
             link: "/md/?url=http://localhost:3001" + link + "&preview=edit",
-            width: 1024,
-            height: 1450,
             roundness: {
               type: 0,
               value: 0,
@@ -60,13 +67,10 @@ function Board() {
       if (["md"].includes(type)) {
         elements = ([
           {
-            id: "pdf-" + crypto.randomUUID(),
-            type: "embeddable",
-            x: pos.x,
-            y: pos.y,
-            link: "/md/?url=http://localhost:3001" + link + "&preview=live",
+            ...base,
             width: 1600,
-            height: 1450,
+            type: "embeddable",
+            link: "/md/?url=http://localhost:3001" + link + "&preview=live",
             roundness: {
               type: 0,
               value: 0,
@@ -86,13 +90,9 @@ function Board() {
       if (type === "pdf") {
         elements = ([
           {
-            id: "pdf-" + crypto.randomUUID(),
+            ...base,
             type: "embeddable",
-            x: pos.x,
-            y: pos.y,
             link: "/pdf/?url=http://localhost:3001" + link,
-            width: 1024,
-            height: 1450,
             roundness: {
               type: 0,
               value: 0,
@@ -126,21 +126,7 @@ function Board() {
     async function handleFileAdded(data: { path: string; type: string }) {
       console.log("A FILE ADDED");
       const { path, type } = data;
-
-      if (["md", "txt"].includes(type)) {
-        const content = await fetch(`http://localhost:3001${path}`).then(
-          (res) => res.text()
-        );
-        addElementToBoard(type, path, content, cursorPositionRef.current);
-        return;
-      }
-
-      if (type === "pdf") {
-        addElementToBoard(type, path, null, cursorPositionRef.current);
-        return;
-      }
-
-      console.error(`Unsupported file type: ${type} for path: ${path}`);
+      addElementToBoard(type, path, cursorPositionRef.current);
     }
 
     socket.on("file-added", handleFileAdded);
