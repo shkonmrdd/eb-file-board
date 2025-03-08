@@ -1,45 +1,20 @@
-import { useEffect, useRef, useState } from "react";
-import io from "socket.io-client";
-import {
-  // convertToExcalidrawElements,
-  Excalidraw,
-} from "@excalidraw/excalidraw";
+import { useRef, useState } from "react";
+import { Excalidraw } from "@excalidraw/excalidraw";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
-// import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import { useExcalidrawElements } from "../hooks/useExcalidrawElements"; // Assuming this is the correct import path
+import { useExcalidrawElements } from "../hooks/useExcalidrawElements";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
-
-const socket = io("http://localhost:3001");
-socket.on("connect", () => console.log("Connected to server"));
+import { useSubscriptions } from "../hooks/useSubscriptions";
 
 function Board() {
+  const cursorPositionRef = useRef({ x: 0, y: 0 });
   const [excalidrawAPI, setExcalidrawAPI] =
     useState<ExcalidrawImperativeAPI | null>(null);
-  const cursorPositionRef = useRef({ x: 0, y: 0 });
   const { addElementToBoard } = useExcalidrawElements();
   const { handleDrop } = useDragAndDrop();
 
-  useEffect(() => {
-    if (!excalidrawAPI) return;
-
-    async function handleFileAdded(data: { path: string; type: string }) {
-      console.log("handleFileAdded:", data);
-      const { path, type } = data;
-      if (excalidrawAPI) {
-        addElementToBoard(excalidrawAPI, type, path, cursorPositionRef.current);
-      }
-    }
-
-    socket.on("file-added", handleFileAdded);
-
-    return () => {
-      socket.off("file-added", handleFileAdded);
-    };
-  }, [excalidrawAPI, addElementToBoard]);
+  useSubscriptions(excalidrawAPI, cursorPositionRef.current, addElementToBoard);
 
   console.log("APP STATE", excalidrawAPI?.getAppState());
-
-  const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
   return (
     <>
@@ -57,8 +32,12 @@ function Board() {
           excalidrawAPI={setExcalidrawAPI}
           initialData={{
             appState: {
+              currentItemFontFamily: 2,
+              currentItemRoughness: 0,
               zenModeEnabled: false,
-              theme: isDarkMode ? "dark" : "light",
+              theme: window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light",
             },
             scrollToContent: true,
           }}
