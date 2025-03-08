@@ -7,6 +7,7 @@ import {
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 // import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { useExcalidrawElements } from "../hooks/useExcalidrawElements"; // Assuming this is the correct import path
+import { useFileUpload } from "../hooks/useFileUpload";
 
 const socket = io("http://localhost:3001");
 socket.on("connect", () => console.log("Connected to server"));
@@ -16,6 +17,7 @@ function Board() {
     useState<ExcalidrawImperativeAPI | null>(null);
   const cursorPositionRef = useRef({ x: 0, y: 0 });
   const { addElementToBoard } = useExcalidrawElements();
+  const { handleDrop } = useFileUpload();
 
   useEffect(() => {
     if (!excalidrawAPI) return;
@@ -41,39 +43,6 @@ function Board() {
     return false;
   };
 
-  const handleDrop = async (
-    event: React.DragEvent<HTMLDivElement> | DragEvent
-  ) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    const files = event.dataTransfer?.files;
-    if (files && files.length > 0) {
-      console.log(`Dropped ${files.length} file(s):`, Array.from(files));
-
-      // Send the first dropped file to the backend
-      const formData = new FormData();
-      formData.append("file", files[0]);
-
-      try {
-        const response = await fetch("http://localhost:3001/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (response.ok) {
-          console.log(await response.json());
-        } else {
-          console.error("Failed to upload file");
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    return false;
-  };
-
   useEffect(() => {
     // Capture the events at the capture phase, before they reach Excalidraw
     document.addEventListener("dragover", handleDragOver, { capture: true });
@@ -86,7 +55,7 @@ function Board() {
       });
       document.removeEventListener("drop", handleDrop, { capture: true });
     };
-  }, []);
+  }, [handleDrop]);
 
   console.log("APP STATE", excalidrawAPI?.getAppState());
 
