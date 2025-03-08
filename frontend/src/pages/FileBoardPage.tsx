@@ -32,9 +32,9 @@ function Board() {
 
       try {
         const elements = createFileElement(type, link, pos);
-        const oldElements = excalidrawAPI.getSceneElements() ?? [];
+        const oldElements = excalidrawAPI?.getSceneElements() ?? [];
         
-        excalidrawAPI.updateScene({
+        excalidrawAPI?.updateScene({
           elements: [...elements, ...oldElements],
         });
       } catch (error) {
