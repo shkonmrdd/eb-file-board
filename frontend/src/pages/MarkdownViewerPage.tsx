@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router";
 import MDEditor from "@uiw/react-md-editor";
+import { socket, emitFileUpdate } from "../socket";
 
 const getUrlParameter = (name: string): string | null => {
   const urlParams = new URLSearchParams(location.search);
@@ -10,6 +11,7 @@ const getUrlParameter = (name: string): string | null => {
 const MarkdownViewerPage: React.FC = () => {
   const params = useParams();
   const [value, setValue] = useState<string>("");
+  const [path, setPath] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async (url: string) => {
@@ -21,6 +23,9 @@ const MarkdownViewerPage: React.FC = () => {
 
         const text = await response.text();
         setValue(text);
+        // Extract path from URL and store it
+        const urlObj = new URL(url);
+        setPath(urlObj.pathname);
       } catch (error) {
         setValue("# File Not Found");
         console.error(error);
@@ -30,6 +35,31 @@ const MarkdownViewerPage: React.FC = () => {
     const url = getUrlParameter("url");
     if (url) fetchData(url);
   }, [params]);
+
+  // Handle value changes and emit socket event
+  const handleValueChange = useCallback((newValue: string | undefined) => {
+    const content = newValue || "";
+    setValue(content);
+    
+    if (path) {
+      emitFileUpdate(path, content);
+    }
+  }, [path]);
+
+  // Socket event listener for file update confirmation
+  useEffect(() => {
+    const handleFileUpdated = (response: { success: boolean; error?: string }) => {
+      if (!response.success) {
+        console.error("Failed to update file:", response.error);
+      }
+    };
+
+    socket.on("file-updated", handleFileUpdated);
+
+    return () => {
+      socket.off("file-updated", handleFileUpdated);
+    };
+  }, []);
 
   const previewParameter = getUrlParameter("preview");
 
@@ -48,13 +78,12 @@ const MarkdownViewerPage: React.FC = () => {
     >
       <MDEditor
         value={value}
-        onChange={(value) => setValue(value || "")}
+        onChange={handleValueChange}
         preview={previewMode}
         style={{
           minHeight: "calc(100vh - 65px)", // Yeah, I know
         }}
       />
-      {/* <MDEditor.Markdown source={value} style={{ whiteSpace: 'pre-wrap' }} /> */}
     </div>
   );
 };
