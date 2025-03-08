@@ -37,26 +37,6 @@ function Board() {
     };
   }, [excalidrawAPI, addElementToBoard]);
 
-  const handleDragOver = (event: DragEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-    return false;
-  };
-
-  useEffect(() => {
-    // Capture the events at the capture phase, before they reach Excalidraw
-    document.addEventListener("dragover", handleDragOver, { capture: true });
-    document.addEventListener("drop", handleDrop, { capture: true });
-
-    // Clean up
-    return () => {
-      document.removeEventListener("dragover", handleDragOver, {
-        capture: true,
-      });
-      document.removeEventListener("drop", handleDrop, { capture: true });
-    };
-  }, [handleDrop]);
-
   console.log("APP STATE", excalidrawAPI?.getAppState());
 
   const isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -69,7 +49,7 @@ function Board() {
           width: "100vw",
           height: "100vh",
           display: "flex",
-          position: "relative", // Add position to help with drag event handling
+          position: "relative",
         }}
         onDrop={handleDrop}
       >
@@ -78,9 +58,6 @@ function Board() {
           initialData={{
             appState: {
               zenModeEnabled: false,
-              // gridSize: 16,
-              // viewBackgroundColor: "#f0f0f0",
-              // Calculate based on the system setting
               theme: isDarkMode ? "dark" : "light",
             },
             scrollToContent: true,
