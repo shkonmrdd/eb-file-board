@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import type { DragEvent as ReactDragEvent } from 'react';
 
-export const useFileUpload = () => {
+export const useDragAndDrop = () => {
   const handleDragOver = useCallback((event: DragEvent) => {
     event.preventDefault();
     event.stopPropagation();

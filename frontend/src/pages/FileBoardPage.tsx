@@ -7,7 +7,7 @@ import {
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 // import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 import { useExcalidrawElements } from "../hooks/useExcalidrawElements"; // Assuming this is the correct import path
-import { useFileUpload } from "../hooks/useFileUpload";
+import { useDragAndDrop } from "../hooks/useDragAndDrop";
 
 const socket = io("http://localhost:3001");
 socket.on("connect", () => console.log("Connected to server"));
@@ -17,7 +17,7 @@ function Board() {
     useState<ExcalidrawImperativeAPI | null>(null);
   const cursorPositionRef = useRef({ x: 0, y: 0 });
   const { addElementToBoard } = useExcalidrawElements();
-  const { handleDrop } = useFileUpload();
+  const { handleDrop } = useDragAndDrop();
 
   useEffect(() => {
     if (!excalidrawAPI) return;
