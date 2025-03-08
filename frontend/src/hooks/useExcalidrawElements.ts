@@ -1,4 +1,5 @@
 import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 
 interface ElementConfig {
   x: number;
@@ -60,5 +61,31 @@ export const useExcalidrawElements = () => {
     return [createEmbeddableElement(elementConfig)];
   };
 
-  return { createFileElement };
+  const addElementToBoard = (
+    excalidrawAPI: ExcalidrawImperativeAPI,
+    type: string,
+    link: string,
+    pos: { x: number; y: number }
+  ) => {
+    if (!["txt", "md", "pdf"].includes(type)) {
+      console.error("Invalid file type");
+      return;
+    }
+
+    try {
+      const elements = createFileElement(type, link, pos);
+      const oldElements = excalidrawAPI?.getSceneElements() ?? [];
+      
+      excalidrawAPI?.updateScene({
+        elements: [...elements, ...oldElements],
+      });
+    } catch (error) {
+      console.error("Failed to create element:", error);
+    }
+  };
+
+  return {
+    createFileElement,
+    addElementToBoard,
+  };
 };

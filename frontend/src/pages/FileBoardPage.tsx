@@ -15,37 +15,17 @@ function Board() {
   const [excalidrawAPI, setExcalidrawAPI] =
     useState<ExcalidrawImperativeAPI | null>(null);
   const cursorPositionRef = useRef({ x: 0, y: 0 });
-  const { createFileElement } = useExcalidrawElements();
+  const { addElementToBoard } = useExcalidrawElements();
 
   useEffect(() => {
     if (!excalidrawAPI) return;
 
-    function addElementToBoard(
-      type: string,
-      link: string,
-      pos: { x: number; y: number }
-    ) {
-      if (!["txt", "md", "pdf"].includes(type)) {
-        console.error("Invalid file type");
-        return;
-      }
-
-      try {
-        const elements = createFileElement(type, link, pos);
-        const oldElements = excalidrawAPI?.getSceneElements() ?? [];
-        
-        excalidrawAPI?.updateScene({
-          elements: [...elements, ...oldElements],
-        });
-      } catch (error) {
-        console.error("Failed to create element:", error);
-      }
-    }
-
     async function handleFileAdded(data: { path: string; type: string }) {
-      console.log("A FILE ADDED");
+      console.log("handleFileAdded:", data);
       const { path, type } = data;
-      addElementToBoard(type, path, cursorPositionRef.current);
+      if (excalidrawAPI) {
+        addElementToBoard(excalidrawAPI, type, path, cursorPositionRef.current);
+      }
     }
 
     socket.on("file-added", handleFileAdded);
@@ -53,7 +33,7 @@ function Board() {
     return () => {
       socket.off("file-added", handleFileAdded);
     };
-  }, [excalidrawAPI, createFileElement]);
+  }, [excalidrawAPI, addElementToBoard]);
 
   const handleDragOver = (event: DragEvent) => {
     event.preventDefault();
