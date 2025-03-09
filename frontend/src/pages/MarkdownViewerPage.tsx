@@ -2,6 +2,12 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useParams } from "react-router";
 import MDEditor from "@uiw/react-md-editor";
 import { socket, emitFileUpdate } from "../socket";
+import { debounce } from "lodash";
+
+// Move debounce outside component
+const debouncedEmitFileUpdate = debounce((path: string, content: string) => {
+  emitFileUpdate(path, content);
+}, 100);
 
 const getUrlParameter = (name: string): string | null => {
   const urlParams = new URLSearchParams(location.search);
@@ -12,6 +18,19 @@ const MarkdownViewerPage: React.FC = () => {
   const params = useParams();
   const [value, setValue] = useState<string>("");
   const [path, setPath] = useState<string>("");
+
+  // Handle value changes and emit socket event
+  const handleValueChange = useCallback(
+    (newValue: string | undefined) => {
+      const content = newValue || "";
+      setValue(content);
+      
+      if (path) {
+        debouncedEmitFileUpdate(path, content);
+      }
+    },
+    [path] // path is the only dependency now
+  );
 
   useEffect(() => {
     const fetchData = async (url: string) => {
@@ -35,16 +54,6 @@ const MarkdownViewerPage: React.FC = () => {
     const url = getUrlParameter("url");
     if (url) fetchData(url);
   }, [params]);
-
-  // Handle value changes and emit socket event
-  const handleValueChange = useCallback((newValue: string | undefined) => {
-    const content = newValue || "";
-    setValue(content);
-    
-    if (path) {
-      emitFileUpdate(path, content);
-    }
-  }, [path]);
 
   // Socket event listeners
   useEffect(() => {
