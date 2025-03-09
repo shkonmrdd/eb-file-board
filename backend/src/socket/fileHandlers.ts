@@ -49,3 +49,28 @@ export const handleFileUpdate = async (
     socket.emit("file-updated", response);
   }
 };
+
+interface StateUpdatePayload {
+  elements: any[];
+  appState: any;
+}
+
+export const handleStateUpdate = async (
+  socket: Socket,
+  payload: StateUpdatePayload
+): Promise<void> => {
+  try {
+    const boardPath = path.join(__dirname, "../../uploads/board.json");
+    
+    // Ensure the directory exists
+    await fs.mkdir(path.dirname(boardPath), { recursive: true });
+    
+    // Write the state file
+    await fs.writeFile(boardPath, JSON.stringify(payload, null, 2));
+    
+    // Broadcast change to other clients
+    socket.broadcast.emit("state-changed", payload);
+  } catch (error) {
+    log(`Error updating state: ${error}`);
+  }
+};

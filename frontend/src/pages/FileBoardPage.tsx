@@ -1,9 +1,14 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
-import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
+import {
+  ExcalidrawImperativeAPI,
+  ExcalidrawInitialDataState,
+} from "@excalidraw/excalidraw/types/types";
 import { useExcalidrawElements } from "../hooks/useExcalidrawElements";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { useSubscriptions } from "../hooks/useSubscriptions";
+import { debounce, set } from "lodash";
+import { socket } from "../socket";
 
 function Board() {
   const cursorPositionRef = useRef({ x: 0, y: 0 });
@@ -11,8 +16,37 @@ function Board() {
     useState<ExcalidrawImperativeAPI | null>(null);
   const { addElementToBoard } = useExcalidrawElements();
   const { handleDrop } = useDragAndDrop();
+  const [initialState, setInitialState] =
+    useState<ExcalidrawInitialDataState | null>(null);
 
   useSubscriptions(excalidrawAPI, cursorPositionRef.current, addElementToBoard);
+
+  useEffect(() => {
+    const loadInitialState = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/files/board.json");
+
+        if (!response.ok) {
+          setInitialState({});
+          return;
+        }
+
+        const state = await response.json();
+        setInitialState(state);
+        console.log("Loaded board state:", state);
+      } catch (error) {
+        console.error("Failed to load board state:", error);
+      }
+    };
+    loadInitialState();
+  }, []);
+
+  const debouncedUpdateState = useCallback(
+    debounce((elements, appState) => {
+      socket.emit("update-state", { elements, appState });
+    }, 500),
+    []
+  );
 
   console.log("APP STATE", excalidrawAPI?.getAppState());
 
@@ -28,24 +62,38 @@ function Board() {
         }}
         onDrop={handleDrop}
       >
-        <Excalidraw
-          excalidrawAPI={setExcalidrawAPI}
-          initialData={{
-            appState: {
-              currentItemFontFamily: 2,
-              currentItemRoughness: 0,
-              zenModeEnabled: false,
-              theme: window.matchMedia("(prefers-color-scheme: dark)").matches
-                ? "dark"
-                : "light",
-            },
-            scrollToContent: true,
-          }}
-          validateEmbeddable={() => true}
-          onPointerUpdate={(event) => {
-            cursorPositionRef.current = event.pointer;
-          }}
-        />
+        {initialState && (
+          <Excalidraw
+            excalidrawAPI={setExcalidrawAPI}
+            initialData={{
+              ...initialState,
+
+              appState: {
+                scrollX: initialState.appState?.scrollX,
+                scrollY: initialState.appState?.scrollY,
+                scrolledOutside: initialState.appState?.scrolledOutside,
+                name: initialState.appState?.name,
+                zoom: initialState.appState?.zoom,
+                viewBackgroundColor: initialState.appState?.viewBackgroundColor,
+
+                currentItemFontFamily: 2,
+                currentItemRoughness: 0,
+                zenModeEnabled: false,
+                theme: window.matchMedia("(prefers-color-scheme: dark)").matches
+                  ? "dark"
+                  : "light",
+              },
+              // scrollToContent: true,
+            }}
+            validateEmbeddable={() => true}
+            onPointerUpdate={(event) => {
+              cursorPositionRef.current = event.pointer;
+            }}
+            onChange={(elements, appState) => {
+              debouncedUpdateState(elements, appState);
+            }}
+          />
+        )}
       </div>
     </>
   );
