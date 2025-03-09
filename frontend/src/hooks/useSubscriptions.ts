@@ -1,10 +1,8 @@
 import { useEffect } from 'react';
-import io from 'socket.io-client';
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
 import { Point } from '@excalidraw/excalidraw/types/types';
 
-const socket = io("http://localhost:3001");
-socket.on("connect", () => console.log("Connected to server"));
+import { socket } from '../socket';
 
 interface FileAddedData {
   path: string;
