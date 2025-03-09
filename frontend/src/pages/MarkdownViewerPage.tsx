@@ -46,7 +46,7 @@ const MarkdownViewerPage: React.FC = () => {
     }
   }, [path]);
 
-  // Socket event listener for file update confirmation
+  // Socket event listeners
   useEffect(() => {
     const handleFileUpdated = (response: { success: boolean; error?: string }) => {
       if (!response.success) {
@@ -54,12 +54,20 @@ const MarkdownViewerPage: React.FC = () => {
       }
     };
 
+    const handleFileChanged = (update: { path: string; content: string }) => {
+      if (update.path === path) {
+        setValue(update.content);
+      }
+    };
+
     socket.on("file-updated", handleFileUpdated);
+    socket.on("file-changed", handleFileChanged);
 
     return () => {
       socket.off("file-updated", handleFileUpdated);
+      socket.off("file-changed", handleFileChanged);
     };
-  }, []);
+  }, [path]);
 
   const previewParameter = getUrlParameter("preview");
 
