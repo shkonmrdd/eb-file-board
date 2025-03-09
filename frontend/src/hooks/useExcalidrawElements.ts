@@ -20,7 +20,7 @@ export const useExcalidrawElements = () => {
     link: config.link,
     // @ts-expect-error - This is a valid property
     roundness: { type: 0, value: 0 },
-    strokeColor: "black",
+    strokeColor: "transparent",
     strokeStyle: "solid",
     backgroundColor: "white",
     fillStyle: "solid",
