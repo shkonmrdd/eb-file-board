@@ -7,7 +7,7 @@ import {
 import { useExcalidrawElements } from "../hooks/useExcalidrawElements";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { useSubscriptions } from "../hooks/useSubscriptions";
-import { debounce, set } from "lodash";
+import { debounce } from "lodash";
 import { socket } from "../socket";
 
 function Board() {
@@ -47,8 +47,6 @@ function Board() {
     }, 500),
     []
   );
-
-  console.log("APP STATE", excalidrawAPI?.getAppState());
 
   return (
     <>
