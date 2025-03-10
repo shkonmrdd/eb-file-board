@@ -4,8 +4,15 @@ import nsfw from "nsfw";
 import { Server } from "socket.io";
 import { log } from "./utils";
 import { uploadsPath } from "./app";
-import { calculateHash, getFileHash, setFileHash } from './sync/FileSync';
-import { frameManager } from './sync/FrameManager';
+import { calculateHash, getFileHash, setFileHash } from "./sync/FileSync";
+import { frameManager } from "./sync/FrameManager";
+
+async function handleBoardChange(content: string): Promise<void> {
+  const boardData = JSON.parse(content);
+  for (const element of boardData.elements) {
+    await frameManager.handleFrameUpdate(element);
+  }
+}
 
 export function initFileWatcher(io: Server): void {
   const watcher = nsfw(uploadsPath, async (events) => {
@@ -13,24 +20,21 @@ export function initFileWatcher(io: Server): void {
       if (event.action === nsfw.actions.MODIFIED) {
         const filePath = path.join(event.directory, event.file);
         try {
-          const content = await fs.readFile(filePath, 'utf-8');
+          const content = await fs.readFile(filePath, "utf-8");
+          
+          if (event.file === "board.json") {
+            await handleBoardChange(content);
+          }
+
           const newHash = calculateHash(content);
           const relativePath = path.relative(uploadsPath, filePath);
           const publicPath = `/files/${relativePath.split(path.sep).join("/")}`;
-          
-          // Handle board.json changes
-          if (event.file === 'board.json') {
-            const boardData = JSON.parse(content);
-            for (const element of boardData.elements) {
-              await frameManager.handleFrameUpdate(element);
-            }
-          }
 
           if (getFileHash(publicPath) !== newHash) {
             setFileHash(publicPath, newHash);
             io.emit("file-changed", {
               path: publicPath,
-              content
+              content,
             });
           }
         } catch (error) {
@@ -44,14 +48,17 @@ export function initFileWatcher(io: Server): void {
             const filePath = path.join(event.directory, event.file);
             const relativePath = path.relative(uploadsPath, filePath);
 
-            const publicPath = `/files/${relativePath.split(path.sep).join("/")}`;
+            const publicPath = `/files/${relativePath
+              .split(path.sep)
+              .join("/")}`;
             io.emit("file-added", {
               path: publicPath,
               type: path.extname(filePath).slice(1),
             });
 
             log(
-              "EMITTING A WEB SOCKET EVENT TO CLIENTS, public path: " + publicPath
+              "EMITTING A WEB SOCKET EVENT TO CLIENTS, public path: " +
+                publicPath
             );
             break;
           }
