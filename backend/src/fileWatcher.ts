@@ -5,6 +5,7 @@ import { Server } from "socket.io";
 import { log } from "./utils";
 import { uploadsPath } from "./app";
 import { calculateHash, getFileHash, setFileHash } from './sync/FileSync';
+import { frameManager } from './sync/FrameManager';
 
 export function initFileWatcher(io: Server): void {
   const watcher = nsfw(uploadsPath, async (events) => {
@@ -17,6 +18,14 @@ export function initFileWatcher(io: Server): void {
           const relativePath = path.relative(uploadsPath, filePath);
           const publicPath = `/files/${relativePath.split(path.sep).join("/")}`;
           
+          // Handle board.json changes
+          if (event.file === 'board.json') {
+            const boardData = JSON.parse(content);
+            for (const element of boardData.elements) {
+              await frameManager.handleFrameUpdate(element);
+            }
+          }
+
           if (getFileHash(publicPath) !== newHash) {
             setFileHash(publicPath, newHash);
             io.emit("file-changed", {
