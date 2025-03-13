@@ -48,6 +48,21 @@ export function initFileWatcher(io: Server): void {
             const filePath = path.join(event.directory, event.file);
             const relativePath = path.relative(uploadsPath, filePath);
 
+            // Check if it's a directory
+            try {
+              const stats = await fs.stat(filePath);
+              if (stats.isDirectory()) {
+                io.emit("folder-created", {
+                  name: event.file,
+                  path: `/files/${relativePath.split(path.sep).join("/")}`,
+                });
+                log(`Folder created: ${event.file}`);
+                break;
+              }
+            } catch (error) {
+              log(`Error checking file type: ${error}`);
+            }
+
             const publicPath = `/files/${relativePath
               .split(path.sep)
               .join("/")}`;
@@ -62,14 +77,47 @@ export function initFileWatcher(io: Server): void {
             );
             break;
           }
-          case nsfw.actions.DELETED:
-            console.log(`File deleted: ${event.directory}/${event.file}`);
-            break;
-          case nsfw.actions.RENAMED:
-            console.log(
-              `File moved: ${event.directory}/${event.oldFile} -> ${event.directory}/${event.newFile}`
+          case nsfw.actions.DELETED: {
+            log(`File deleted: ${event.directory}/${event.file}`);
+            const relativePath = path.relative(
+              uploadsPath,
+              path.join(event.directory, event.file)
             );
+            const publicPath = `/files/${relativePath.split(path.sep).join("/")}`;
+            io.emit("file-deleted", {
+              path: publicPath,
+            });
             break;
+          }
+          case nsfw.actions.RENAMED: {
+            const oldPath = path.join(event.directory, event.oldFile);
+            const newPath = path.join(event.directory, event.newFile);
+            log(`File renamed: ${oldPath} -> ${newPath}`);
+
+            // Check if it's a directory
+            try {
+              const stats = await fs.stat(newPath);
+              if (stats.isDirectory()) {
+                io.emit("folder-renamed", {
+                  oldName: event.oldFile,
+                  newName: event.newFile,
+                });
+                log(`Folder renamed: ${event.oldFile} -> ${event.newFile}`);
+                break;
+              }
+            } catch (error) {
+              log(`Error checking file type during rename: ${error}`);
+            }
+
+            // Regular file rename handling
+            const relativeOldPath = path.relative(uploadsPath, oldPath);
+            const relativeNewPath = path.relative(uploadsPath, newPath);
+            io.emit("file-renamed", {
+              oldPath: `/files/${relativeOldPath.split(path.sep).join("/")}`,
+              newPath: `/files/${relativeNewPath.split(path.sep).join("/")}`,
+            });
+            break;
+          }
         }
       }
     }

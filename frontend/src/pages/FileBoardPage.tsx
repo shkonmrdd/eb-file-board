@@ -7,6 +7,7 @@ import {
 import { useExcalidrawElements } from "../hooks/useExcalidrawElements";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { useSubscriptions } from "../hooks/useSubscriptions";
+import { useFrameSync } from "../hooks/useFrameSync";
 import { debounce } from "lodash";
 import { socket } from "../socket";
 
@@ -20,6 +21,7 @@ function Board() {
     useState<ExcalidrawInitialDataState | null>(null);
 
   useSubscriptions(excalidrawAPI, cursorPositionRef.current, addElementToBoard);
+  useFrameSync(excalidrawAPI);
 
   useEffect(() => {
     const loadInitialState = async () => {
