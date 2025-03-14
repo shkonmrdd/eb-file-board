@@ -45,7 +45,8 @@ function Board() {
 
   const debouncedUpdateState = useCallback(
     debounce((elements, appState) => {
-      socket.emit("update-state", { elements, appState });
+      const elementsNew = elements.filter((element) => element.isDeleted !== true);
+      socket.emit("update-state", { elements: elementsNew, appState });
       console.log("Auto-saving board state...");
     }, 250),
     []
