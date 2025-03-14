@@ -97,6 +97,23 @@ class FrameManager {
       console.error(`Error initializing frames from folders: ${error}`);
     }
   }
+
+  registerFrame(frameId: string, name: string) {
+    this.frames.set(frameId, { id: frameId, name, type: 'frame' });
+    log(`Registered frame: ${frameId} as ${name}`);
+  }
+  
+  updateFrameName(frameId: string, newName: string) {
+    const frame = this.frames.get(frameId);
+    if (frame) {
+      frame.name = newName;
+      this.frames.set(frameId, frame);
+      log(`Updated frame name: ${frameId} to ${newName}`);
+    } else {
+      log(`Frame not found: ${frameId}`);
+      this.registerFrame(frameId, newName);
+    }
+  }
 }
 
 export const frameManager = new FrameManager();

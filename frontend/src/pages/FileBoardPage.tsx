@@ -7,107 +7,156 @@ import {
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { useExcalidrawElements } from "../hooks/useExcalidrawElements";
 import { useSubscriptions } from "../hooks/useSubscriptions";
+import { useSyncContext, SyncProvider } from "../sync/SyncContext";
+import { SyncStatusIndicator } from "../components/SyncStatusIndicator";
 import { debounce } from "lodash";
-import { socket } from "../socket";
 
-// Import new architecture components
-import { ExcalidrawAdapter } from '../sync/adapters/excalidraw-adapter';
-import { SocketFileSystemAdapter } from '../sync/adapters/socket-filesystem-adapter';
-import { SimpleEventBus } from '../sync/eventbus';
-import { SimpleStructureManager } from '../sync/structure-manager';
-
-// Create singleton instances (could move to a context provider later)
-const excalidrawAdapter = new ExcalidrawAdapter();
-const fileSystemAdapter = new SocketFileSystemAdapter();
-const eventBus = new SimpleEventBus();
-const structureManager = new SimpleStructureManager(
-  excalidrawAdapter,
-  fileSystemAdapter,
-  eventBus
-);
-
-function Board() {
+// Separate the board component for better organization
+const BoardInternal = () => {
   const cursorPositionRef = useRef({ x: 0, y: 0 });
-  const [excalidrawAPI, setExcalidrawAPI] =
-    useState<ExcalidrawImperativeAPI | null>(null);
+  const [excalidrawAPI, setExcalidrawAPI] = useState<ExcalidrawImperativeAPI | null>(null);
   const { addElementToBoard } = useExcalidrawElements();
   const { handleDrop } = useDragAndDrop();
-  const [initialState, setInitialState] =
-    useState<ExcalidrawInitialDataState | null>(null);
-  const [syncInitialized, setSyncInitialized] = useState(false);
+  const [initialState, setInitialState] = useState<ExcalidrawInitialDataState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [internalUpdate, setInternalUpdate] = useState(false);
+  
+  // Use the sync context
+  const { setExcalidrawAPI: setSyncExcalidrawAPI, forceSync } = useSyncContext();
 
-  // Set up the Excalidraw API when it becomes available
-  useEffect(() => {
-    if (excalidrawAPI) {
-      excalidrawAdapter.setExcalidrawAPI(excalidrawAPI);
-    }
-  }, [excalidrawAPI]);
-
-  // Initialize sync system
-  useEffect(() => {
-    if (excalidrawAPI && !syncInitialized) {
-      const initSync = async () => {
-        await fileSystemAdapter.initialize();
-        await structureManager.initialize({
-          bidirectional: true,
-          conflictResolution: 'latest-wins',
-          autoSync: true,
-          syncInterval: 30000 // Sync every 30 seconds
-        });
-        
-        // Start sync
-        await structureManager.startSync();
-        setSyncInitialized(true);
-      };
+  // Create a properly typed callback for checking frame changes
+  const checkForFrameChanges = useCallback(
+    debounce((elements: any[]) => {
+      if (internalUpdate) return; // Skip if this was an internal update
       
-      initSync();
+      const frameElements = elements.filter(el => 
+        !el.isDeleted && el.type === 'frame'
+      );
+      
+      // Detect if any frame has changed
+      if (frameElements.length > 0) {
+        console.log('Frame elements detected:', frameElements.length);
+        
+        // Force sync after a short delay
+        setTimeout(() => {
+          forceSync().catch(console.error);
+        }, 300);
+      }
+    }, 500),
+    [internalUpdate, forceSync]
+  );
+
+  // Set up board element observer to detect changes to frames
+  useEffect(() => {
+    if (!excalidrawAPI) return undefined; // Proper return type for cleanup
+    
+    // Observer for element changes
+    const observer = new MutationObserver(() => {
+      const elements = excalidrawAPI.getSceneElements();
+      checkForFrameChanges(elements);
+    });
+    
+    // Try to find and observe the Excalidraw canvas
+    const canvas = document.querySelector('.excalidraw .layer-ui__wrapper');
+    if (canvas) {
+      observer.observe(canvas, { 
+        childList: true,
+        subtree: true,
+        attributes: true
+      });
     }
     
+    // Return cleanup function with explicit typing
     return () => {
-      if (syncInitialized) {
-        structureManager.stopSync();
-      }
+      observer.disconnect();
     };
-  }, [excalidrawAPI, syncInitialized]);
+  }, [excalidrawAPI, checkForFrameChanges]); // Proper dependencies
 
-  // Use existing hooks for backward compatibility
+  // Handle API initialization and loading state
+  const handleExcalidrawAPIInit = (api: ExcalidrawImperativeAPI) => {
+    console.log("Excalidraw API initialized");
+    setExcalidrawAPI(api);
+    setSyncExcalidrawAPI(api);
+  };
+
+  // Update ExcalidrawAPI in the sync context when it's available
+  useEffect(() => {
+    if (excalidrawAPI) {
+      setSyncExcalidrawAPI(excalidrawAPI);
+    }
+  }, [excalidrawAPI, setSyncExcalidrawAPI]);
+
+  // Keep existing hooks for backward compatibility
   useSubscriptions(excalidrawAPI, cursorPositionRef.current, addElementToBoard);
 
   // Load initial board state
   useEffect(() => {
     const loadInitialState = async () => {
       try {
+        setLoading(true);
         const response = await fetch("http://localhost:3001/files/board.json");
 
         if (!response.ok) {
+          console.log("No existing board.json found, creating empty board");
           setInitialState({});
+          setLoading(false);
           return;
         }
 
         const state = await response.json();
-        setInitialState(state);
         console.log("Loaded board state:", state);
+        setInitialState(state);
       } catch (error) {
         console.error("Failed to load board state:", error);
+        setInitialState({});
+      } finally {
+        setLoading(false);
       }
     };
     loadInitialState();
   }, []);
 
-  // Keep the existing debounced update as a fallback during migration
-  const debouncedUpdateState = useCallback(
-    debounce((elements, appState) => {
-      const elementsNew = elements.filter((element) => element.isDeleted !== true);
-      socket.emit("update-state", { elements: elementsNew, appState });
-      console.log("Auto-saving board state...");
-      
-      // Trigger sync with new architecture
-      if (syncInitialized) {
-        structureManager.forceSync().catch(console.error);
-      }
-    }, 250),
-    [syncInitialized]
-  );
+  // Handle Excalidraw changes and sync them
+  const handleExcalidrawChange = useCallback(() => {
+    if (internalUpdate) return;
+    
+    try {
+      // This will be handled by our sync system now
+      // The forceSync will be triggered by the frame change detection above
+    } catch (error) {
+      console.error("Error handling Excalidraw change:", error);
+    }
+  }, [internalUpdate]);
+
+  // Don't render anything until we have loaded the initial state
+  if (loading) {
+    return (
+      <div style={{ 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center",
+        width: "100vw",
+        height: "100vh",
+        background: "#f5f5f5"
+      }}>
+        <div>Loading board...</div>
+      </div>
+    );
+  }
+
+  // Ensure we have a valid structure for appState and collaborators
+  const safeInitialState = {
+    ...initialState,
+    appState: {
+      ...(initialState?.appState || {}),
+      collaborators: [], // Ensure collaborators is an empty object, not undefined
+      currentItemFontFamily: 2,
+      currentItemRoughness: 0,
+      zenModeEnabled: false,
+      theme: initialState?.appState?.theme ?? 
+        (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"),
+    }
+  };
 
   return (
     <>
@@ -121,39 +170,27 @@ function Board() {
         }}
         onDrop={handleDrop}
       >
-        {initialState && (
-          <Excalidraw
-            excalidrawAPI={(api) => {
-              setExcalidrawAPI(api);
-            }}
-            initialData={{
-              ...initialState,
-              appState: {
-                scrollX: initialState.appState?.scrollX,
-                scrollY: initialState.appState?.scrollY,
-                scrolledOutside: initialState.appState?.scrolledOutside,
-                name: initialState.appState?.name,
-                zoom: initialState.appState?.zoom,
-                viewBackgroundColor: initialState.appState?.viewBackgroundColor,
-                currentItemFontFamily: 2,
-                currentItemRoughness: 0,
-                zenModeEnabled: false,
-                theme: initialState.appState?.theme ?? window.matchMedia("(prefers-color-scheme: dark)").matches
-                  ? "dark"
-                  : "light",
-              },
-            }}
-            validateEmbeddable={() => true}
-            onPointerUpdate={(event) => {
-              cursorPositionRef.current = event.pointer;
-            }}
-            onChange={(elements, appState) => {
-              debouncedUpdateState(elements, appState);
-            }}
-          />
-        )}
+        <Excalidraw
+          excalidrawAPI={handleExcalidrawAPIInit}
+          initialData={safeInitialState}
+          validateEmbeddable={() => true}
+          onPointerUpdate={(event) => {
+            cursorPositionRef.current = event.pointer;
+          }}
+          onChange={handleExcalidrawChange}
+        />
       </div>
+      <SyncStatusIndicator />
     </>
+  );
+};
+
+// Wrap the board with our sync provider
+function Board() {
+  return (
+    <SyncProvider>
+      <BoardInternal />
+    </SyncProvider>
   );
 }
 
