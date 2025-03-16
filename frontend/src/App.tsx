@@ -9,6 +9,7 @@ import PDFViewerPage from "./pages/PDFViewerPage";
 import MarkdownViewerPage from "./pages/MarkdownViewerPage";
 import Board from "./pages/FileBoardPage";
 import WithHeaderLayout from "./layouts/WithHeaderLayout";
+import "@excalidraw/excalidraw/index.css";
 
 function App() {
   return (

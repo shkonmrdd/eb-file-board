@@ -1,5 +1,5 @@
-import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
-import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types/types";
+import { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
+import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 
 interface ElementConfig {
   x: number;
@@ -16,7 +16,7 @@ export const useExcalidrawElements = () => {
     x: config.x,
     y: config.y,
     width: config.width ?? 1024,
-    height: config.height ?? 1450,
+    height: config.height ?? 1510,
     link: config.link,
     // @ts-expect-error - This is a valid property
     roundness: { type: 0, value: 0 },
@@ -35,21 +35,19 @@ export const useExcalidrawElements = () => {
     link: string,
     position: { x: number; y: number }
   ): ExcalidrawElement[] => {
-    const baseUrl = "http://localhost:3001";
-
     const config: Record<string, (link: string) => ElementConfig> = {
       txt: (link) => ({
         ...position,
-        link: `/md/?url=${baseUrl}${link}&preview=edit`,
+        link: `/md/?url=${link}&preview=edit`,
       }),
       md: (link) => ({
         ...position,
         width: 1600,
-        link: `/md/?url=${baseUrl}${link}&preview=live`,
+        link: `/md/?url=${link}&preview=live`,
       }),
       pdf: (link) => ({
         ...position,
-        link: `/pdf/?url=${baseUrl}${link}`,
+        link: `/pdf/?url=${link}`,
       }),
     };
 

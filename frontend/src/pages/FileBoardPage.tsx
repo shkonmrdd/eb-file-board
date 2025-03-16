@@ -1,25 +1,21 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Excalidraw } from "@excalidraw/excalidraw";
 import {
   ExcalidrawImperativeAPI,
   ExcalidrawInitialDataState,
-} from "@excalidraw/excalidraw/types/types";
-import { useExcalidrawElements } from "../hooks/useExcalidrawElements";
+} from "@excalidraw/excalidraw/types";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
-import { useSubscriptions } from "../hooks/useSubscriptions";
 import { debounce } from "lodash";
 import { socket } from "../socket";
 
-function Board() {
-  const cursorPositionRef = useRef({ x: 0, y: 0 });
-  const [excalidrawAPI, setExcalidrawAPI] =
-    useState<ExcalidrawImperativeAPI | null>(null);
-  const { addElementToBoard } = useExcalidrawElements();
-  const { handleDrop } = useDragAndDrop(excalidrawAPI);
-  const [initialState, setInitialState] =
-    useState<ExcalidrawInitialDataState | null>(null);
+import { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 
-  useSubscriptions(excalidrawAPI, cursorPositionRef.current, addElementToBoard);
+function Board() {
+  const [excalidrawAPI, setExcalidrawAPI] = 
+    useState<ExcalidrawImperativeAPI | null>(null);
+  const { handleDrop, cursorPositionRef } = useDragAndDrop({ excalidrawAPI });
+  const [initialState, setInitialState] = 
+    useState<ExcalidrawInitialDataState | null>(null);
 
   useEffect(() => {
     const loadInitialState = async () => {
@@ -43,7 +39,7 @@ function Board() {
 
   const debouncedUpdateState = useCallback(
     debounce((elements, appState) => {
-      const elementsNew = elements.filter((element) => element.isDeleted !== true);
+      const elementsNew = elements.filter((element: ExcalidrawElement) => element.isDeleted !== true);
       socket.emit("update-state", { elements: elementsNew, appState });
       console.log("Auto-saving board state...");
     }, 250),
@@ -64,10 +60,15 @@ function Board() {
       >
         {initialState && (
           <Excalidraw
-            excalidrawAPI={setExcalidrawAPI}
+            excalidrawAPI={(api) => setExcalidrawAPI(api)}
+            onPointerUpdate={(pointerData) => {
+              // Update cursor position with the pointer data
+              if (pointerData.pointer) {
+                cursorPositionRef.current = pointerData.pointer;
+              }
+            }}
             initialData={{
               ...initialState,
-
               appState: {
                 scrollX: initialState.appState?.scrollX,
                 scrollY: initialState.appState?.scrollY,
@@ -75,7 +76,6 @@ function Board() {
                 name: initialState.appState?.name,
                 zoom: initialState.appState?.zoom,
                 viewBackgroundColor: initialState.appState?.viewBackgroundColor,
-
                 currentItemFontFamily: 2,
                 currentItemRoughness: 0,
                 zenModeEnabled: false,
@@ -83,12 +83,8 @@ function Board() {
                   ? "dark"
                   : "light",
               },
-              // scrollToContent: true,
             }}
             validateEmbeddable={() => true}
-            onPointerUpdate={(event) => {
-              cursorPositionRef.current = event.pointer;
-            }}
             onChange={(elements, appState) => {
               debouncedUpdateState(elements, appState);
             }}
