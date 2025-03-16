@@ -8,6 +8,7 @@ dist
 *.local
 
 uploads/*
+files/*
 
 # Editor directories and files
 .vscode/*

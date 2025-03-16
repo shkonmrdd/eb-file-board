@@ -1,12 +1,16 @@
+import { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types/types';
 import { useCallback, useEffect } from 'react';
 import type { DragEvent as ReactDragEvent } from 'react';
+import { useExcalidrawElements } from './useExcalidrawElements';
 
-export const useDragAndDrop = () => {
+export const useDragAndDrop = (excalidrawAPI: ExcalidrawImperativeAPI) => {
   const handleDragOver = useCallback((event: DragEvent) => {
     event.preventDefault();
     event.stopPropagation();
     return false;
   }, []);
+
+  const { addElementToBoard } = useExcalidrawElements();
 
   const handleDrop = useCallback(
     async (event: ReactDragEvent<HTMLDivElement> | DragEvent) => {
@@ -27,7 +31,14 @@ export const useDragAndDrop = () => {
           });
 
           if (response.ok) {
-            console.log(await response.json());
+            
+            const result = await response.json();
+            console.log("File uploaded successfully:", result);
+            console.log("excalidrawAPI", excalidrawAPI);
+
+            addElementToBoard(excalidrawAPI, "txt", result.path, { x: 0, y: 0 });
+
+
           } else {
             console.error("Failed to upload file");
           }

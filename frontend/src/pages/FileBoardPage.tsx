@@ -15,7 +15,7 @@ function Board() {
   const [excalidrawAPI, setExcalidrawAPI] =
     useState<ExcalidrawImperativeAPI | null>(null);
   const { addElementToBoard } = useExcalidrawElements();
-  const { handleDrop } = useDragAndDrop();
+  const { handleDrop } = useDragAndDrop(excalidrawAPI);
   const [initialState, setInitialState] =
     useState<ExcalidrawInitialDataState | null>(null);
 

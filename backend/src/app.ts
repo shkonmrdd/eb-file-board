@@ -1,30 +1,26 @@
 import express from "express";
 import multer from "multer";
-import path from "path";
 import cors from "cors";
 import { log } from "./utils";
+import { config } from "./config";
 
 const app = express();
 app.use(cors());
 
-export const uploadsPath = path.join(__dirname, "../uploads");
-app.use("/files", express.static(uploadsPath));
+app.use(config.uploadsRoute, express.static(config.uploadsPath));
 
-// Simple middleware to log route accesses
 app.use((req, res, next) => {
   log(`Route accessed: ${req.url}`);
   next();
 });
 
-// Root route
 app.get("/", (req, res) => {
   res.send("AI File board API is up and running!");
 });
 
-// Configure Multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadsPath);
+    cb(null, config.uploadsPath);
   },
   filename: (req, file, cb) => {
     const uniqueName = `${file.originalname}`;
@@ -33,7 +29,6 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// File upload endpoint
 app.post("/upload", upload.single("file"), (req, res): void => {
   if (!req.file) {
     log("No file uploaded");
@@ -43,7 +38,8 @@ app.post("/upload", upload.single("file"), (req, res): void => {
   log(`File uploaded: ${req.file.filename}`);
   res.json({
     message: "File uploaded successfully!",
-    fileUrl: `${req.protocol}://${req.get("host")}/files/${req.file.filename}`,
+    fileUrl: `${req.protocol}://${req.get("host")}${config.uploadsRoute}/${req.file.filename}`,
+    type: req.file.mimetype,
   });
 });
 
