@@ -1,17 +1,43 @@
-import { useCallback, useEffect } from 'react';
+import { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
+import { useCallback, useEffect, useRef } from 'react';
 import type { DragEvent as ReactDragEvent } from 'react';
+import { useExcalidrawElements } from './useExcalidrawElements';
 
-export const useDragAndDrop = () => {
+interface UseDragAndDropProps {
+  excalidrawAPI: ExcalidrawImperativeAPI | null;
+  boardName: string;
+}
+
+export const useDragAndDrop = ({ excalidrawAPI, boardName }: UseDragAndDropProps) => {
+  const cursorPositionRef = useRef({ x: 100, y: 100 });
+  const { addElementToBoard } = useExcalidrawElements();
+
+  // Remove the handleMouseMove function as we'll use onPointerUpdate instead
+
   const handleDragOver = useCallback((event: DragEvent) => {
     event.preventDefault();
     event.stopPropagation();
     return false;
   }, []);
 
+  const getFileTypeFromName = (fileName: string): string => {
+    const extension = fileName.split('.').pop()?.toLowerCase() || '';
+    
+    // Map extensions to supported types
+    if (['md', 'markdown'].includes(extension)) return 'md';
+    if (['pdf'].includes(extension)) return 'pdf';
+    return 'txt'; // Default to text for all other types
+  };
+
   const handleDrop = useCallback(
     async (event: ReactDragEvent<HTMLDivElement> | DragEvent) => {
       event.preventDefault();
       event.stopPropagation();
+
+      if (!excalidrawAPI) {
+        console.error("Excalidraw API not available");
+        return false;
+      }
 
       const files = event.dataTransfer?.files;
       if (files && files.length > 0) {
@@ -19,6 +45,7 @@ export const useDragAndDrop = () => {
 
         const formData = new FormData();
         formData.append("file", files[0]);
+        formData.append("boardName", boardName);
 
         try {
           const response = await fetch("http://localhost:3001/upload", {
@@ -27,31 +54,45 @@ export const useDragAndDrop = () => {
           });
 
           if (response.ok) {
-            console.log(await response.json());
+            const result = await response.json();
+            console.log("File uploaded successfully:", result);
+            
+            // Determine file type from the name
+            const fileType = getFileTypeFromName(files[0].name);
+            
+            // Use cursor position for placement
+            const position = { ...cursorPositionRef.current };
+            
+            // Add element to the board with appropriate type
+            addElementToBoard(excalidrawAPI, fileType, result.fileUrl, position);
           } else {
             console.error("Failed to upload file");
           }
         } catch (error) {
-          console.error(error);
+          console.error("Error uploading file:", error);
         }
       }
 
       return false;
     },
-    []
+    [excalidrawAPI, addElementToBoard]
   );
 
   useEffect(() => {
     document.addEventListener("dragover", handleDragOver, { capture: true });
     document.addEventListener("drop", handleDrop, { capture: true });
+    // Remove mousemove listener since we'll use onPointerUpdate
 
     return () => {
-      document.removeEventListener("dragover", handleDragOver, {
-        capture: true,
-      });
+      document.removeEventListener("dragover", handleDragOver, { capture: true });
       document.removeEventListener("drop", handleDrop, { capture: true });
+      // Remove mousemove cleanup
     };
-  }, [handleDragOver, handleDrop]); // Now properly depending on the callbacks
+  }, [handleDragOver, handleDrop]);
 
-  return { handleDrop };
+  // Export the ref so we can update it from outside
+  return { 
+    handleDrop,
+    cursorPositionRef 
+  };
 };
