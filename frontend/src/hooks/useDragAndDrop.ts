@@ -5,9 +5,10 @@ import { useExcalidrawElements } from './useExcalidrawElements';
 
 interface UseDragAndDropProps {
   excalidrawAPI: ExcalidrawImperativeAPI | null;
+  boardName: string;
 }
 
-export const useDragAndDrop = ({ excalidrawAPI }: UseDragAndDropProps) => {
+export const useDragAndDrop = ({ excalidrawAPI, boardName }: UseDragAndDropProps) => {
   const cursorPositionRef = useRef({ x: 100, y: 100 });
   const { addElementToBoard } = useExcalidrawElements();
 
@@ -44,6 +45,7 @@ export const useDragAndDrop = ({ excalidrawAPI }: UseDragAndDropProps) => {
 
         const formData = new FormData();
         formData.append("file", files[0]);
+        formData.append("boardName", boardName);
 
         try {
           const response = await fetch("http://localhost:3001/upload", {

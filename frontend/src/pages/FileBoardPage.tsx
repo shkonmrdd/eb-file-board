@@ -16,7 +16,7 @@ const Board = () => {
 
   const [excalidrawAPI, setExcalidrawAPI] = 
     useState<ExcalidrawImperativeAPI | null>(null);
-  const { handleDrop, cursorPositionRef } = useDragAndDrop({ excalidrawAPI });
+  const { handleDrop, cursorPositionRef } = useDragAndDrop({ excalidrawAPI, boardName: boardName ?? "root" });
   const [initialState, setInitialState] = 
     useState<ExcalidrawInitialDataState | null>(null);
 
