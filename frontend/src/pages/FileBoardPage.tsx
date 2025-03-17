@@ -64,10 +64,12 @@ const Board = () => {
             display: "flex",
             position: "relative",
           }}
-          onDrop={handleDrop}
+          
         >
           {initialState && (
             <Excalidraw
+              // @ts-expect-error onDrop is not recognized by Excalidraw
+              onDrop={handleDrop}
               excalidrawAPI={(api) => setExcalidrawAPI(api)}
               onPointerUpdate={(pointerData) => {
                 // Update cursor position with the pointer data
