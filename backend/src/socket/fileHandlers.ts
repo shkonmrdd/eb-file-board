@@ -8,9 +8,10 @@ interface FileUpdatePayload {
   content: string;
 }
 
-export const handleFileUpdate = async (
-  { path: filePath, content }: FileUpdatePayload
-): Promise<void> => {
+export const handleFileUpdate = async ({
+  path: filePath,
+  content,
+}: FileUpdatePayload): Promise<void> => {
   try {
     const filePathDecoded = decodeURIComponent(filePath);
     // TODO: use config.uploadsPath instead of hardcoded path
@@ -23,26 +24,29 @@ export const handleFileUpdate = async (
     // Ensure the directory exists
     await fs.mkdir(path.dirname(actualPath), { recursive: true });
     await fs.writeFile(actualPath, content);
-
   } catch (error) {
     log(`Error updating file: ${error}`);
   }
 };
 
 interface StateUpdatePayload {
-  elements: any[];
-  appState: any;
+  board: {
+    elements: any[];
+    appState: any;
+  };
+  boardName: string;
 }
 
 export const handleStateUpdate = async (
   payload: StateUpdatePayload
 ): Promise<void> => {
   try {
-    const boardPath = path.join(config.uploadsPath, `board.json`);
-    
+    const { board, boardName } = payload;
+    const boardPath = path.join(config.uploadsPath, boardName, `board.json`);
+
     // Ensure the directory exists
     await fs.mkdir(path.dirname(boardPath), { recursive: true });
-    await fs.writeFile(boardPath, JSON.stringify(payload, null, 2));
+    await fs.writeFile(boardPath, JSON.stringify(board, null, 2));
   } catch (error) {
     log(`Error updating state: ${error}`);
   }

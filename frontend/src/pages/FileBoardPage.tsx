@@ -7,10 +7,13 @@ import {
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { debounce } from "lodash";
 import { socket } from "../socket";
-
 import { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
+import { useParams } from 'react-router';
 
-function Board() {
+const Board = () => {
+  const { boardName } = useParams();
+  console.log(`Board Name: ${boardName}`);
+
   const [excalidrawAPI, setExcalidrawAPI] = 
     useState<ExcalidrawImperativeAPI | null>(null);
   const { handleDrop, cursorPositionRef } = useDragAndDrop({ excalidrawAPI });
@@ -20,7 +23,8 @@ function Board() {
   useEffect(() => {
     const loadInitialState = async () => {
       try {
-        const response = await fetch("http://localhost:3001/files/board.json");
+        const boardUrl = `http://localhost:3001/files/${boardName}/board.json`;
+        const response = await fetch(boardUrl);
 
         if (!response.ok) {
           setInitialState({});
@@ -40,7 +44,11 @@ function Board() {
   const debouncedUpdateState = useCallback(
     debounce((elements, appState) => {
       const elementsNew = elements.filter((element: ExcalidrawElement) => element.isDeleted !== true);
-      socket.emit("update-state", { elements: elementsNew, appState });
+      const payload = {
+        board: { elements: elementsNew, appState },
+        boardName,
+      }
+      socket.emit("update-state", payload);
       console.log("Auto-saving board state...");
     }, 250),
     []
@@ -48,51 +56,51 @@ function Board() {
 
   return (
     <>
-      <div
-        id="app"
-        style={{
-          width: "100vw",
-          height: "100vh",
-          display: "flex",
-          position: "relative",
-        }}
-        onDrop={handleDrop}
-      >
-        {initialState && (
-          <Excalidraw
-            excalidrawAPI={(api) => setExcalidrawAPI(api)}
-            onPointerUpdate={(pointerData) => {
-              // Update cursor position with the pointer data
-              if (pointerData.pointer) {
-                cursorPositionRef.current = pointerData.pointer;
-              }
-            }}
-            initialData={{
-              ...initialState,
-              appState: {
-                scrollX: initialState.appState?.scrollX,
-                scrollY: initialState.appState?.scrollY,
-                scrolledOutside: initialState.appState?.scrolledOutside,
-                name: initialState.appState?.name,
-                zoom: initialState.appState?.zoom,
-                viewBackgroundColor: initialState.appState?.viewBackgroundColor,
-                currentItemFontFamily: 2,
-                currentItemRoughness: 0,
-                zenModeEnabled: false,
-                theme: initialState.appState?.theme ?? window.matchMedia("(prefers-color-scheme: dark)").matches
-                  ? "dark"
-                  : "light",
-              },
-            }}
-            validateEmbeddable={() => true}
-            onChange={(elements, appState) => {
-              debouncedUpdateState(elements, appState);
-            }}
-          />
-        )}
+        <div
+          id="app"
+          style={{
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            position: "relative",
+          }}
+          onDrop={handleDrop}
+        >
+          {initialState && (
+            <Excalidraw
+              excalidrawAPI={(api) => setExcalidrawAPI(api)}
+              onPointerUpdate={(pointerData) => {
+                // Update cursor position with the pointer data
+                if (pointerData.pointer) {
+                  cursorPositionRef.current = pointerData.pointer;
+                }
+              }}
+              initialData={{
+                ...initialState,
+                appState: {
+                  scrollX: initialState.appState?.scrollX,
+                  scrollY: initialState.appState?.scrollY,
+                  scrolledOutside: initialState.appState?.scrolledOutside,
+                  name: initialState.appState?.name,
+                  zoom: initialState.appState?.zoom,
+                  viewBackgroundColor: initialState.appState?.viewBackgroundColor,
+                  currentItemFontFamily: 2,
+                  currentItemRoughness: 0,
+                  zenModeEnabled: false,
+                  theme: initialState.appState?.theme ?? window.matchMedia("(prefers-color-scheme: dark)").matches
+                    ? "dark"
+                    : "light",
+                },
+              }}
+              validateEmbeddable={() => true}
+              onChange={(elements, appState) => {
+                debouncedUpdateState(elements, appState);
+              }}
+            />
+          )}
       </div>
     </>
   );
-}
+};
 
 export default Board;
