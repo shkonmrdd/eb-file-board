@@ -13,9 +13,6 @@ const wss = new Server(httpServer, {
   },
 });
 
-log("Initialized frames from folders");
-
-// Initialize the file watcher and socket handlers
 initializeSocket(wss);
 
 httpServer.listen(port, () => {
