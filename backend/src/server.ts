@@ -13,11 +13,13 @@ const wss = new Server(httpServer, {
   },
 });
 
-log("Initialized frames from folders");
-
-// Initialize the file watcher and socket handlers
 initializeSocket(wss);
 
 httpServer.listen(port, () => {
   log(`Server running on port ${port}`);
+});
+
+process.on('SIGINT', () => {
+  console.log("Gracefully shutting down...");
+  process.exit(0);
 });

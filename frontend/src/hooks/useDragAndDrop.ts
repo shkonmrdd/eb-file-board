@@ -48,7 +48,8 @@ export const useDragAndDrop = ({ excalidrawAPI, boardName }: UseDragAndDropProps
         formData.append("boardName", boardName);
 
         try {
-          const response = await fetch("http://localhost:3001/upload", {
+          const url = import.meta.env.PROD ? "/upload" : "http://localhost:3001/upload";
+          const response = await fetch(url, {
             method: "POST",
             body: formData,
           });
