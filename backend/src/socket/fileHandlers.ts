@@ -14,10 +14,9 @@ export const handleFileUpdate = async ({
 }: FileUpdatePayload): Promise<void> => {
   try {
     const filePathDecoded = decodeURIComponent(filePath);
-    // TODO: use config.uploadsPath instead of hardcoded path
+    // Use config.uploadsPath instead of hardcoded path
     const actualPath = path.join(
-      __dirname,
-      "../../files",
+      config.uploadsPath,
       filePathDecoded.replace(/^\/files/, "")
     );
 
