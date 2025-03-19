@@ -1,4 +1,5 @@
-FROM node:18-alpine AS build
+# Backend build stage
+FROM node:22-alpine AS backend-build
 
 WORKDIR /app
 
@@ -13,23 +14,39 @@ COPY backend/src ./src
 
 # Build the application
 RUN npm run build
-# Verify the build output location and content
-RUN ls -la dist || echo "dist directory not found"
 
-# Production image
-FROM node:18-alpine
+# Frontend build stage
+FROM node:22-alpine AS frontend-build
 
 WORKDIR /app
 
-# Copy only the built files and package.json
-COPY --from=build /app/dist ./dist
-COPY --from=build /app/package.json ./
-COPY --from=build /app/package-lock.json ./
+# Copy package files and install dependencies
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
 
-# List contents to verify files were copied correctly
-RUN ls -la && ls -la dist || echo "dist directory not found"
+# Copy frontend source code
+COPY frontend/tsconfig.json frontend/tsconfig.app.json frontend/tsconfig.node.json ./
+COPY frontend/vite.config.ts frontend/index.html ./
+COPY frontend/src ./src
+COPY frontend/public ./public
 
-# Install only production dependencies
+# Build the frontend application
+RUN npm run build
+
+# Production image
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Copy backend built files and package.json
+COPY --from=backend-build /app/dist ./dist
+COPY --from=backend-build /app/package.json ./
+COPY --from=backend-build /app/package-lock.json ./
+
+# Copy frontend build output to a directory the backend can serve
+COPY --from=frontend-build /app/dist ./public
+
+# Install only production dependencies for backend
 RUN npm ci --production
 
 # Create data directory structure for mounted volume
@@ -44,5 +61,3 @@ EXPOSE 3001
 
 # Command to run the application
 CMD ["node", "./dist/server.js"]
-
-# CMD ["sh", "-c", "trap : TERM INT; sleep infinity & wait"]

@@ -9,6 +9,9 @@ import fs from "fs";
 const app = express();
 app.use(cors());
 
+// Serve the static files from the public directory (frontend build)
+app.use(express.static(path.join(process.cwd(), 'public')));
+
 app.use(config.uploadsRoute, express.static(config.uploadsPath));
 
 app.use((req, res, next) => {
@@ -16,7 +19,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/", (req, res) => {
+app.get("/api", (req, res) => {
   res.send("AI File board API is up and running!");
 });
 
@@ -57,6 +60,12 @@ app.post("/upload", upload.single("file"), (req, res): void => {
     fileUrl: `${req.protocol}://${req.get("host")}${config.uploadsRoute}/${safeBoardName}/${fileName}`,
     type: req.file.mimetype,
   });
+});
+
+// Catch-all route to serve the frontend for any unmatched routes
+// This needs to be after all API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
 export { app };
