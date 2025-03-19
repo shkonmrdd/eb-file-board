@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Excalidraw } from "@excalidraw/excalidraw";
+import { Excalidraw, MainMenu } from "@excalidraw/excalidraw";
 import {
   ExcalidrawImperativeAPI,
   ExcalidrawInitialDataState,
@@ -108,7 +108,21 @@ const Board = () => {
             onChange={(elements, appState) => {
               debouncedUpdateState(elements, appState);
             }}
-          />
+          >
+            <MainMenu>
+              <MainMenu.DefaultItems.LoadScene />
+              <MainMenu.DefaultItems.Export />
+              <MainMenu.DefaultItems.SaveAsImage />
+              <MainMenu.DefaultItems.SearchMenu />
+              <MainMenu.DefaultItems.ClearCanvas />
+              <MainMenu.Separator />
+              <MainMenu.DefaultItems.ToggleTheme />
+              <MainMenu.DefaultItems.ChangeCanvasBackground />
+              {/* <MainMenu.Item onSelect={() => window.alert("Item1")}>
+                Item1
+              </MainMenu.Item> */}
+            </MainMenu>
+          </Excalidraw>
         )}
       </div>
     </>
