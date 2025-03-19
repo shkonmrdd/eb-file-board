@@ -11,12 +11,12 @@ import { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import { useParams } from 'react-router';
 
 const Board = () => {
-  const { boardName } = useParams();
-  console.log(`Board Name: ${boardName}`);
+  const params = useParams();
+  const boardName = params.boardName ?? "main";
 
   const [excalidrawAPI, setExcalidrawAPI] = 
     useState<ExcalidrawImperativeAPI | null>(null);
-  const { handleDrop, cursorPositionRef } = useDragAndDrop({ excalidrawAPI, boardName: boardName ?? "root" });
+  const { handleDrop, cursorPositionRef } = useDragAndDrop({ excalidrawAPI, boardName: boardName });
   const [initialState, setInitialState] = 
     useState<ExcalidrawInitialDataState | null>(null);
 
