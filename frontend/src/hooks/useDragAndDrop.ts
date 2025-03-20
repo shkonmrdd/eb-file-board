@@ -2,25 +2,31 @@ import { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import { useCallback, useEffect, useRef } from 'react';
 import type { DragEvent as ReactDragEvent } from 'react';
 import { useExcalidrawElements } from './useExcalidrawElements';
+import { FileType, Position, FileUploadResponse } from '../types';
 
 interface UseDragAndDropProps {
   excalidrawAPI: ExcalidrawImperativeAPI | null;
   boardName: string;
 }
 
-export const useDragAndDrop = ({ excalidrawAPI, boardName }: UseDragAndDropProps) => {
-  const cursorPositionRef = useRef({ x: 100, y: 100 });
+interface UseDragAndDropResult {
+  handleDrop: (event: ReactDragEvent<HTMLDivElement> | DragEvent) => Promise<boolean>;
+  cursorPositionRef: React.MutableRefObject<Position>;
+}
+
+export const useDragAndDrop = ({ excalidrawAPI, boardName }: UseDragAndDropProps): UseDragAndDropResult => {
+  const cursorPositionRef = useRef<Position>({ x: 100, y: 100 });
   const { addElementToBoard } = useExcalidrawElements();
 
   // Remove the handleMouseMove function as we'll use onPointerUpdate instead
 
-  const handleDragOver = useCallback((event: DragEvent) => {
+  const handleDragOver = useCallback((event: DragEvent): boolean => {
     event.preventDefault();
     event.stopPropagation();
     return false;
   }, []);
 
-  const getFileTypeFromName = (fileName: string): string => {
+  const getFileTypeFromName = (fileName: string): FileType => {
     const extension = fileName.split('.').pop()?.toLowerCase() || '';
     
     // Map extensions to supported types
@@ -30,7 +36,7 @@ export const useDragAndDrop = ({ excalidrawAPI, boardName }: UseDragAndDropProps
   };
 
   const handleDrop = useCallback(
-    async (event: ReactDragEvent<HTMLDivElement> | DragEvent) => {
+    async (event: ReactDragEvent<HTMLDivElement> | DragEvent): Promise<boolean> => {
       event.preventDefault();
       event.stopPropagation();
 
@@ -55,7 +61,7 @@ export const useDragAndDrop = ({ excalidrawAPI, boardName }: UseDragAndDropProps
           });
 
           if (response.ok) {
-            const result = await response.json();
+            const result = await response.json() as FileUploadResponse;
             console.log("File uploaded successfully:", result);
             
             // Determine file type from the name
@@ -76,7 +82,7 @@ export const useDragAndDrop = ({ excalidrawAPI, boardName }: UseDragAndDropProps
 
       return false;
     },
-    [excalidrawAPI, addElementToBoard]
+    [excalidrawAPI, addElementToBoard, boardName]
   );
 
   useEffect(() => {

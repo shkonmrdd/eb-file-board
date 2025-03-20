@@ -3,12 +3,14 @@ import { Excalidraw, MainMenu } from "@excalidraw/excalidraw";
 import {
   ExcalidrawImperativeAPI,
   ExcalidrawInitialDataState,
+  AppState,
 } from "@excalidraw/excalidraw/types";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { debounce } from "lodash";
 import { socket } from "../socket";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import { useParams } from "react-router";
+import { BoardUpdatePayload } from "../types";
 
 const Board = () => {
   const params = useParams();
@@ -24,7 +26,7 @@ const Board = () => {
     useState<ExcalidrawInitialDataState | null>(null);
 
   useEffect(() => {
-    const loadInitialState = async () => {
+    const loadInitialState = async (): Promise<void> => {
       try {
         const boardRelative = `/files/${boardName}/board.json`;
         const boardFull = "http://localhost:3001" + boardRelative;
@@ -37,7 +39,7 @@ const Board = () => {
           return;
         }
 
-        const state = await response.json();
+        const state = await response.json() as ExcalidrawInitialDataState;
         setInitialState(state);
         console.log("Loaded board state:", state);
       } catch (error) {
@@ -46,21 +48,21 @@ const Board = () => {
       }
     };
     loadInitialState();
-  }, []);
+  }, [boardName]);
 
   const debouncedUpdateState = useCallback(
-    debounce((elements, appState) => {
+    debounce((elements: readonly ExcalidrawElement[], appState: AppState): void => {
       const elementsNew = elements.filter(
         (element: ExcalidrawElement) => element.isDeleted !== true
       );
-      const payload = {
-        board: { elements: elementsNew, appState },
+      const payload: BoardUpdatePayload = {
+        board: { elements: [...elementsNew], appState },
         boardName,
       };
       socket.emit("update-state", payload);
       console.log("Auto-saving board state...");
     }, 250),
-    []
+    [boardName]
   );
 
   return (
@@ -118,9 +120,6 @@ const Board = () => {
               <MainMenu.Separator />
               <MainMenu.DefaultItems.ToggleTheme />
               <MainMenu.DefaultItems.ChangeCanvasBackground />
-              {/* <MainMenu.Item onSelect={() => window.alert("Item1")}>
-                Item1
-              </MainMenu.Item> */}
             </MainMenu>
           </Excalidraw>
         )}

@@ -1,5 +1,6 @@
 import { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
+import { FileType, Position } from "../types";
 
 interface ElementConfig {
   x: number;
@@ -31,11 +32,11 @@ export const useExcalidrawElements = () => {
   });
 
   const createFileElement = (
-    type: string,
+    type: FileType,
     link: string,
-    position: { x: number; y: number }
+    position: Position
   ): ExcalidrawElement[] => {
-    const config: Record<string, (link: string) => ElementConfig> = {
+    const config: Record<FileType, (link: string) => ElementConfig> = {
       txt: (link) => ({
         ...position,
         link: `/md/?url=${link}&preview=edit`,
@@ -61,15 +62,10 @@ export const useExcalidrawElements = () => {
 
   const addElementToBoard = (
     excalidrawAPI: ExcalidrawImperativeAPI,
-    type: string,
+    type: FileType,
     link: string,
-    pos: { x: number; y: number }
-  ) => {
-    if (!["txt", "md", "pdf"].includes(type)) {
-      console.error("Invalid file type");
-      return;
-    }
-
+    pos: Position
+  ): void => {
     try {
       const elements = createFileElement(type, link, pos);
       const oldElements = excalidrawAPI?.getSceneElements() ?? [];

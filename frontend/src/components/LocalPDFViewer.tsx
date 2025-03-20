@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
+import { PDFViewerProps, PDFDocumentState, PDFRenderContext } from '../types/pdf';
 
 const pdfWorkerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.mjs',
@@ -8,41 +9,34 @@ const pdfWorkerSrc = new URL(
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
-interface PDFViewerProps {
-  url: string;
-  width?: string | number;
-  height?: string | number;
-}
-
 const PDFViewer: React.FC<PDFViewerProps> = ({
   url,
   width = '100%',
   height = '100%',
 }) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [scale] = useState(4);
-  const [pdfDoc, setPdfDoc] = useState<pdfjsLib.PDFDocumentProxy | null>(null);
-  const [pageCanvases, setPageCanvases] = useState<HTMLCanvasElement[]>([]);
+  const [state, setState] = useState<PDFDocumentState>({
+    loading: true,
+    error: null,
+    scale: 4,
+    pdfDoc: null,
+    pageCanvases: []
+  });
 
   // Load the PDF document
   useEffect(() => {
     if (!url) return;
     
-    setLoading(true);
-    setError(null);
+    setState(prev => ({ ...prev, loading: true, error: null }));
     
     const loadingTask = pdfjsLib.getDocument(url);
     
     loadingTask.promise
       .then(doc => {
-        setPdfDoc(doc);
-        setLoading(false);
+        setState(prev => ({ ...prev, pdfDoc: doc, loading: false }));
       })
       .catch(err => {
         console.error('Error loading PDF:', err);
-        // setError('Failed to load PDF');
-        setLoading(false);
+        setState(prev => ({ ...prev, loading: false }));
       });
       
     return () => {
@@ -52,40 +46,47 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
   // Render all pages
   useEffect(() => {
-    if (!pdfDoc) return;
+    if (!state.pdfDoc) return;
 
-    const renderAllPages = async () => {
+    const renderAllPages = async (): Promise<void> => {
       const canvases: HTMLCanvasElement[] = [];
       
-      for (let pageNum = 1; pageNum <= pdfDoc.numPages; pageNum++) {
-        const page = await pdfDoc.getPage(pageNum);
-        const viewport = page.getViewport({ scale });
+      try {
+        // We already checked that state.pdfDoc is not null above
+        const doc = state.pdfDoc!; 
         
-        const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
+        for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
+          const page = await doc.getPage(pageNum);
+          const viewport = page.getViewport({ scale: state.scale });
+          
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          
+          if (!context) continue;
+          
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+          
+          const renderContext: PDFRenderContext = {
+            canvasContext: context,
+            viewport: viewport
+          };
+          
+          await page.render(renderContext).promise;
+          canvases.push(canvas);
+        }
         
-        if (!context) continue;
-        
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-        
-        const renderContext = {
-          canvasContext: context,
-          viewport: viewport
-        };
-        
-        await page.render(renderContext).promise;
-        canvases.push(canvas);
+        setState(prev => ({ ...prev, pageCanvases: canvases }));
+      } catch (err) {
+        console.error('Error rendering pages:', err);
+        setState(prev => ({ ...prev, error: 'Failed to render pages' }));
       }
-      
-      setPageCanvases(canvases);
     };
 
-    renderAllPages().catch(err => {
-      console.error('Error rendering pages:', err);
-      setError('Failed to render pages');
-    });
-  }, [pdfDoc, scale]);
+    renderAllPages();
+  }, [state.pdfDoc, state.scale]);
+
+  const { loading, error, pageCanvases } = state;
 
   return (
     <div style={{ width, height, overflow: 'auto' }}>
