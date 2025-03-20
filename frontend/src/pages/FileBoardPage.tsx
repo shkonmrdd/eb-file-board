@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Excalidraw, MainMenu } from "@excalidraw/excalidraw";
 import {
   ExcalidrawImperativeAPI,
@@ -11,11 +11,15 @@ import { socket } from "../socket";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import { useParams } from "react-router";
 import { BoardUpdatePayload } from "../types";
+import { useBoardStore } from "../store/boardStore";
 
 const Board = () => {
   const params = useParams();
   const boardName = params.boardName ?? "main";
-
+  
+  // Use the board store
+  const { boards, updateBoard, setCurrentBoard } = useBoardStore();
+  
   const [excalidrawAPI, setExcalidrawAPI] =
     useState<ExcalidrawImperativeAPI | null>(null);
   const { handleDrop, cursorPositionRef } = useDragAndDrop({
@@ -24,10 +28,37 @@ const Board = () => {
   });
   const [initialState, setInitialState] =
     useState<ExcalidrawInitialDataState | null>(null);
+  
+  // Keep a reference to the last saved state for comparison
+  const lastSavedStateRef = useRef<{
+    elements: ExcalidrawElement[];
+    appStateJson: string;
+  }>({ elements: [], appStateJson: '' });
 
   useEffect(() => {
+    // Set current board in the store
+    setCurrentBoard(boardName);
+    
     const loadInitialState = async (): Promise<void> => {
       try {
+        // Check if we already have the board in our store
+        if (boards[boardName]) {
+          const elements = boards[boardName].elements;
+          const appState = boards[boardName].appState;
+          
+          setInitialState({
+            elements,
+            appState
+          });
+          
+          // Initialize the lastSavedStateRef with the loaded state
+          lastSavedStateRef.current = {
+            elements: [...elements],
+            appStateJson: JSON.stringify(appState)
+          };
+          return;
+        }
+        
         const boardRelative = `/files/${boardName}/board.json`;
         const boardFull = "http://localhost:3001" + boardRelative;
 
@@ -41,6 +72,15 @@ const Board = () => {
 
         const state = await response.json() as ExcalidrawInitialDataState;
         setInitialState(state);
+        
+        // Initialize the lastSavedStateRef with the loaded state
+        if (state.elements) {
+          lastSavedStateRef.current = {
+            elements: [...state.elements],
+            appStateJson: JSON.stringify(state.appState)
+          };
+        }
+        
         console.log("Loaded board state:", state);
       } catch (error) {
         console.error("Failed to load board state:", error);
@@ -48,22 +88,66 @@ const Board = () => {
       }
     };
     loadInitialState();
-  }, [boardName]);
+  }, [boardName, boards, setCurrentBoard]);
 
   const debouncedUpdateState = useCallback(
     debounce((elements: readonly ExcalidrawElement[], appState: AppState): void => {
       const elementsNew = elements.filter(
         (element: ExcalidrawElement) => element.isDeleted !== true
       );
-      const payload: BoardUpdatePayload = {
-        board: { elements: [...elementsNew], appState },
-        boardName,
-      };
-      socket.emit("update-state", payload);
-      console.log("Auto-saving board state...");
+      
+      // Stringify the appState for comparison
+      const appStateJson = JSON.stringify(appState);
+      
+      // Check if there's an actual change before updating
+      const lastSavedElements = lastSavedStateRef.current.elements;
+      const lastSavedAppStateJson = lastSavedStateRef.current.appStateJson;
+      
+      // Simple check for array length and then deep comparison for app state
+      const hasElementsChanged = elementsNew.length !== lastSavedElements.length || 
+        JSON.stringify(elementsNew) !== JSON.stringify(lastSavedElements);
+      
+      // Check if app state changed (simple string comparison)
+      const hasAppStateChanged = appStateJson !== lastSavedAppStateJson;
+      
+      // Only update if something changed
+      if (hasElementsChanged || hasAppStateChanged) {
+        // Update the board in our store
+        updateBoard(boardName, [...elementsNew], appState);
+        
+        // Update the lastSavedStateRef
+        lastSavedStateRef.current = {
+          elements: [...elementsNew],
+          appStateJson
+        };
+        
+        console.log("Auto-saving board state...");
+      }
     }, 250),
-    [boardName]
+    [boardName, updateBoard]
   );
+
+  // Listen for board updates from other clients
+  useEffect(() => {
+    socket.on("board-update", (payload: BoardUpdatePayload) => {
+      if (payload.boardName === boardName && excalidrawAPI) {
+        excalidrawAPI.updateScene({
+          elements: payload.board.elements,
+          appState: payload.board.appState
+        });
+        
+        // Update lastSavedStateRef when we receive updates from others
+        lastSavedStateRef.current = {
+          elements: [...payload.board.elements],
+          appStateJson: JSON.stringify(payload.board.appState)
+        };
+      }
+    });
+    
+    return () => {
+      socket.off("board-update");
+    };
+  }, [boardName, excalidrawAPI]);
 
   return (
     <>

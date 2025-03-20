@@ -6,6 +6,7 @@ const SOCKET_URL = import.meta.env.PROD ? "/" : "ws://localhost:3001";
 // Define socket event types
 interface ServerToClientEvents {
   "board-update": (data: BoardUpdatePayload) => void;
+  "file-changed": (data: FileUpdatePayload) => void;
 }
 
 interface ClientToServerEvents {

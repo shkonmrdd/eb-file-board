@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { DragEvent as ReactDragEvent } from 'react';
 import { useExcalidrawElements } from './useExcalidrawElements';
 import { FileType, Position, FileUploadResponse } from '../types';
+import { useFileStore } from '../store/fileStore';
 
 interface UseDragAndDropProps {
   excalidrawAPI: ExcalidrawImperativeAPI | null;
@@ -17,8 +18,7 @@ interface UseDragAndDropResult {
 export const useDragAndDrop = ({ excalidrawAPI, boardName }: UseDragAndDropProps): UseDragAndDropResult => {
   const cursorPositionRef = useRef<Position>({ x: 100, y: 100 });
   const { addElementToBoard } = useExcalidrawElements();
-
-  // Remove the handleMouseMove function as we'll use onPointerUpdate instead
+  const { addFile } = useFileStore();
 
   const handleDragOver = useCallback((event: DragEvent): boolean => {
     event.preventDefault();
@@ -67,6 +67,13 @@ export const useDragAndDrop = ({ excalidrawAPI, boardName }: UseDragAndDropProps
             // Determine file type from the name
             const fileType = getFileTypeFromName(files[0].name);
             
+            // Add to file store (read file content if needed)
+            if (fileType === 'md' || fileType === 'txt') {
+              // For text files, we can read and store the content
+              const fileContent = await files[0].text();
+              addFile(result.fileUrl, fileContent, fileType);
+            }
+            
             // Use cursor position for placement
             const position = { ...cursorPositionRef.current };
             
@@ -82,18 +89,16 @@ export const useDragAndDrop = ({ excalidrawAPI, boardName }: UseDragAndDropProps
 
       return false;
     },
-    [excalidrawAPI, addElementToBoard, boardName]
+    [excalidrawAPI, addElementToBoard, boardName, addFile]
   );
 
   useEffect(() => {
     document.addEventListener("dragover", handleDragOver, { capture: true });
     document.addEventListener("drop", handleDrop, { capture: true });
-    // Remove mousemove listener since we'll use onPointerUpdate
 
     return () => {
       document.removeEventListener("dragover", handleDragOver, { capture: true });
       document.removeEventListener("drop", handleDrop, { capture: true });
-      // Remove mousemove cleanup
     };
   }, [handleDragOver, handleDrop]);
 

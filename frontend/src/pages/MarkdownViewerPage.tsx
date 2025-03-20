@@ -1,12 +1,13 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "react-router";
 import MDEditor from "@uiw/react-md-editor";
-import { socket, emitFileUpdate } from "../socket";
+import { socket } from "../socket";
 import { debounce } from "lodash";
+import { useFileStore } from "../store/fileStore";
 
 // Move debounce outside component
 const debouncedEmitFileUpdate = debounce((path: string, content: string) => {
-  emitFileUpdate(path, content);
+  // This will be handled by the file store now
 }, 100);
 
 const getUrlParameter = (name: string): string | null => {
@@ -18,23 +19,45 @@ const MarkdownViewerPage: React.FC = () => {
   const params = useParams();
   const [value, setValue] = useState<string>("");
   const [path, setPath] = useState<string>("");
+  
+  // Keep track of the last saved content for comparison
+  const lastSavedContentRef = useRef<string>("");
+  
+  // Use the file store
+  const { updateFileContent, addFile, getFileContent, setCurrentFile } = useFileStore();
 
   // Handle value changes and emit socket event
   const handleValueChange = useCallback(
-    (newValue: string | undefined) => {
+    debounce((newValue: string | undefined) => {
       const content = newValue || "";
       setValue(content);
       
-      if (path) {
-        debouncedEmitFileUpdate(path, content);
+      if (path && content !== lastSavedContentRef.current) {
+        // Only update if content has changed
+        updateFileContent(path, content, 'md');
+        lastSavedContentRef.current = content;
       }
-    },
-    [path] // path is the only dependency now
+    }, 300), // Increased debounce delay to reduce updates while typing
+    [path, updateFileContent]
   );
 
   useEffect(() => {
     const fetchData = async (url: string) => {
       try {
+        // Try to get content from store first
+        const urlObj = new URL(url);
+        const filePath = urlObj.pathname;
+        setPath(filePath);
+        setCurrentFile(filePath);
+        
+        const storedContent = getFileContent(filePath);
+        if (storedContent) {
+          setValue(storedContent);
+          lastSavedContentRef.current = storedContent;
+          return;
+        }
+        
+        // If not in store, fetch from server
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error("File not found");
@@ -42,38 +65,38 @@ const MarkdownViewerPage: React.FC = () => {
 
         const text = await response.text();
         setValue(text);
-        // Extract path from URL and store it
-        const urlObj = new URL(url);
-        setPath(urlObj.pathname);
+        lastSavedContentRef.current = text;
+        
+        // Add to file store
+        addFile(filePath, text, 'md');
       } catch (error) {
         setValue("# File Not Found");
+        lastSavedContentRef.current = "# File Not Found";
         console.error(error);
       }
     };
 
     const url = getUrlParameter("url");
     if (url) fetchData(url);
-  }, [params]);
+    
+    return () => {
+      // Clear current file when component unmounts
+      setCurrentFile(null);
+    };
+  }, [params, addFile, getFileContent, setCurrentFile]);
 
   // Socket event listeners
   useEffect(() => {
-    const handleFileUpdated = (response: { success: boolean; error?: string }) => {
-      if (!response.success) {
-        console.error("Failed to update file:", response.error);
-      }
-    };
-
     const handleFileChanged = (update: { path: string; content: string }) => {
       if (update.path === path) {
         setValue(update.content);
+        lastSavedContentRef.current = update.content;
       }
     };
 
-    socket.on("file-updated", handleFileUpdated);
     socket.on("file-changed", handleFileChanged);
 
     return () => {
-      socket.off("file-updated", handleFileUpdated);
       socket.off("file-changed", handleFileChanged);
     };
   }, [path]);
@@ -86,6 +109,11 @@ const MarkdownViewerPage: React.FC = () => {
     return "preview";
   })();
 
+  const onEditorChange = useCallback((newValue: string | undefined) => {
+    setValue(newValue || "");
+    handleValueChange(newValue);
+  }, [handleValueChange]);
+
   return (
     <div
       style={{
@@ -95,7 +123,7 @@ const MarkdownViewerPage: React.FC = () => {
     >
       <MDEditor
         value={value}
-        onChange={handleValueChange}
+        onChange={onEditorChange}
         preview={previewMode}
         style={{
           minHeight: "calc(100vh - 65px)", // Yeah, I know
