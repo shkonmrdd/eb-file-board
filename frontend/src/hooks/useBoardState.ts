@@ -5,6 +5,8 @@ import { debounce } from "lodash";
 import { socket } from "../socket";
 import { BoardUpdatePayload } from "../types";
 import { useBoardStore } from "../store/boardStore";
+import { loadBoardState } from "../services/api";
+import { DEBOUNCE_DELAY } from "../constants/config";
 
 export const useBoardState = (boardName: string) => {
   const { boards, updateBoard, setCurrentBoard } = useBoardStore();
@@ -37,30 +39,27 @@ export const useBoardState = (boardName: string) => {
           return;
         }
         
-        const boardRelative = `/files/${boardName}/board.json`;
-        const boardFull = "http://localhost:3001" + boardRelative;
-        const url = import.meta.env.PROD ? boardRelative : boardFull;
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          setInitialState({});
-          return;
-        }
-
-        const state = await response.json() as ExcalidrawInitialDataState;
-        setInitialState(state);
-        
-        if (state.elements) {
+        const state = await loadBoardState(boardName);
+        if (state) {
+          setInitialState(state);
           lastSavedStateRef.current = {
             elements: [...state.elements],
             appStateJson: JSON.stringify(state.appState)
           };
+        } else {
+          setInitialState(null);
+          lastSavedStateRef.current = {
+            elements: [],
+            appStateJson: ''
+          };
         }
-        
-        console.log("Loaded board state:", state);
       } catch (error) {
         console.error("Failed to load board state:", error);
-        setInitialState({});
+        setInitialState(null);
+        lastSavedStateRef.current = {
+          elements: [],
+          appStateJson: ''
+        };
       }
     };
     loadInitialState();
@@ -89,10 +88,8 @@ export const useBoardState = (boardName: string) => {
           elements: [...elementsNew],
           appStateJson
         };
-        
-        console.log("Auto-saving board state...");
       }
-    }, 250),
+    }, DEBOUNCE_DELAY),
     [boardName, updateBoard]
   );
 
