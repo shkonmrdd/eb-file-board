@@ -66,10 +66,10 @@ const Board = () => {
                 currentItemRoughness: 0,
                 zenModeEnabled: false,
                 theme:
-                  initialState?.appState?.theme ??
-                  window.matchMedia("(prefers-color-scheme: dark)").matches
+                  initialState?.appState?.theme ||
+                  (window.matchMedia("(prefers-color-scheme: dark)").matches
                     ? "dark"
-                    : "light",
+                    : "light"),
               },
             }}
             validateEmbeddable={() => true}
