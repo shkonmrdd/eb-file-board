@@ -4,6 +4,19 @@ import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { useBoardState } from "../hooks/useBoardState";
 import { useState, useEffect } from "react";
 
+const LoadingScreen = () => (
+  <div style={{ 
+    width: "100%", 
+    height: "100%", 
+    display: "flex", 
+    justifyContent: "center", 
+    alignItems: "center",
+    color: "#888"
+  }}>
+    Loading board...
+  </div>
+);
+
 const Board = () => {
   const params = useParams();
   const boardName = params.boardName ?? "main";
@@ -33,16 +46,7 @@ const Board = () => {
         }}
       >
         {isLoading ? (
-          <div style={{ 
-            width: "100%", 
-            height: "100%", 
-            display: "flex", 
-            justifyContent: "center", 
-            alignItems: "center",
-            color: "#888"
-          }}>
-            Loading board...
-          </div>
+          <LoadingScreen />
         ) : (
           <Excalidraw
             // @ts-expect-error onDrop is not recognized by Excalidraw
