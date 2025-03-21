@@ -47,23 +47,41 @@ export const useBoardState = (boardName: string) => {
             appStateJson: JSON.stringify(state.appState)
           };
         } else {
-          setInitialState(null);
+          // Create an empty state for a new board
+          const emptyState = {
+            elements: [],
+            appState: {} as AppState
+          };
+          
+          setInitialState(emptyState);
           lastSavedStateRef.current = {
             elements: [],
-            appStateJson: ''
+            appStateJson: '{}'
           };
+          
+          // Initialize this board in the store and save to backend
+          updateBoard(boardName, [], {} as AppState);
         }
       } catch (error) {
         console.error("Failed to load board state:", error);
-        setInitialState(null);
+        
+        // Fallback to empty state in case of error
+        const emptyState = {
+          elements: [],
+          appState: {} as AppState
+        };
+        
+        setInitialState(emptyState);
         lastSavedStateRef.current = {
           elements: [],
-          appStateJson: ''
+          appStateJson: '{}'
         };
+        
+        updateBoard(boardName, [], {} as AppState);
       }
     };
     loadInitialState();
-  }, [boardName, boards, setCurrentBoard]);
+  }, [boardName, boards, setCurrentBoard, updateBoard]);
 
   const debouncedUpdateState = useCallback(
     debounce((elements: readonly ExcalidrawElement[], appState: AppState): void => {

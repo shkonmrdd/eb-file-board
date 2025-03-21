@@ -2,16 +2,24 @@ import { useParams } from "react-router";
 import { Excalidraw, MainMenu } from "@excalidraw/excalidraw";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { useBoardState } from "../hooks/useBoardState";
+import { useState, useEffect } from "react";
 
 const Board = () => {
   const params = useParams();
   const boardName = params.boardName ?? "main";
+  const [isLoading, setIsLoading] = useState(true);
   
   const { excalidrawAPI, setExcalidrawAPI, initialState, debouncedUpdateState } = useBoardState(boardName);
   const { handleDrop, cursorPositionRef } = useDragAndDrop({
     excalidrawAPI,
     boardName,
   });
+
+  useEffect(() => {
+    if (initialState !== null) {
+      setIsLoading(false);
+    }
+  }, [initialState]);
 
   return (
     <>
@@ -24,7 +32,18 @@ const Board = () => {
           position: "relative",
         }}
       >
-        {initialState && (
+        {isLoading ? (
+          <div style={{ 
+            width: "100%", 
+            height: "100%", 
+            display: "flex", 
+            justifyContent: "center", 
+            alignItems: "center",
+            color: "#888"
+          }}>
+            Loading board...
+          </div>
+        ) : (
           <Excalidraw
             // @ts-expect-error onDrop is not recognized by Excalidraw
             onDrop={handleDrop}
@@ -35,19 +54,19 @@ const Board = () => {
               }
             }}
             initialData={{
-              ...initialState,
+              elements: initialState?.elements ?? [],
               appState: {
-                scrollX: initialState.appState?.scrollX,
-                scrollY: initialState.appState?.scrollY,
-                scrolledOutside: initialState.appState?.scrolledOutside,
-                name: initialState.appState?.name,
-                zoom: initialState.appState?.zoom,
-                viewBackgroundColor: initialState.appState?.viewBackgroundColor,
+                scrollX: initialState?.appState?.scrollX,
+                scrollY: initialState?.appState?.scrollY,
+                scrolledOutside: initialState?.appState?.scrolledOutside,
+                name: initialState?.appState?.name,
+                zoom: initialState?.appState?.zoom,
+                viewBackgroundColor: initialState?.appState?.viewBackgroundColor,
                 currentItemFontFamily: 2,
                 currentItemRoughness: 0,
                 zenModeEnabled: false,
                 theme:
-                  initialState.appState?.theme ??
+                  initialState?.appState?.theme ??
                   window.matchMedia("(prefers-color-scheme: dark)").matches
                     ? "dark"
                     : "light",
