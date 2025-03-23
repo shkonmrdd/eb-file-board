@@ -3,7 +3,7 @@ import { ExcalidrawImperativeAPI, ExcalidrawInitialDataState, AppState } from "@
 import { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import { debounce } from "lodash";
 import { socket } from "../socket";
-import { BoardUpdatePayload, FileData } from "../types";
+import { BoardUpdatePayload } from "../types";
 import { useBoardStore } from "../store/boardStore";
 import { loadBoardState } from "../services/api";
 import { DEBOUNCE_DELAY } from "../constants/config";
