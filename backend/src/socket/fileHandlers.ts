@@ -40,6 +40,13 @@ interface StateUpdatePayload {
   board: {
     elements: any[];
     appState: any;
+    files?: Record<string, {
+      id: string;
+      mimeType: string;
+      dataURL: string;
+      created: number;
+      lastRetrieved: number;
+    }>;
   };
   boardName: string;
 }
@@ -55,7 +62,15 @@ export const handleStateUpdate = async (
 
     // Ensure the directory exists
     await fs.mkdir(path.dirname(boardPath), { recursive: true });
-    await fs.writeFile(boardPath, JSON.stringify(board, null, 2));
+    
+    // Create a complete board object with files data
+    const boardToSave = {
+      elements: board.elements,
+      appState: board.appState,
+      files: board.files || {}
+    };
+    
+    await fs.writeFile(boardPath, JSON.stringify(boardToSave, null, 2));
   } catch (error) {
     log(`Error updating state: ${error}`);
   }

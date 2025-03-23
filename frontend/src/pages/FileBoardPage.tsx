@@ -75,6 +75,7 @@ const Board = () => {
                     ? "dark"
                     : "light"),
               },
+              files: initialState?.files,
             }}
             validateEmbeddable={() => true}
             onChange={(elements, appState) => {

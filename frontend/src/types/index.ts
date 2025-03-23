@@ -6,6 +6,15 @@ import type { DragEvent as ReactDragEvent } from 'react';
 export interface BoardState {
   elements: ExcalidrawElement[];
   appState: AppState;
+  files?: Record<string, FileData>;
+}
+
+export interface FileData {
+  id: string;
+  mimeType: string;
+  dataURL: string;
+  created: number;
+  lastRetrieved: number;
 }
 
 export interface BoardUpdatePayload {
@@ -13,6 +22,7 @@ export interface BoardUpdatePayload {
   board: {
     elements: ExcalidrawElement[];
     appState: AppState;
+    files?: Record<string, FileData>;
   };
 }
 
@@ -49,6 +59,6 @@ export interface UseDragAndDropResult {
 export interface BoardStore {
   boards: Record<string, BoardState>;
   currentBoard: string | null;
-  updateBoard: (boardName: string, elements: ExcalidrawElement[], appState: AppState) => void;
+  updateBoard: (boardName: string, elements: ExcalidrawElement[], appState: AppState, files?: Record<string, FileData>) => void;
   setCurrentBoard: (boardName: string) => void;
 } 
