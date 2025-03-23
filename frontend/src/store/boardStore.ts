@@ -29,6 +29,9 @@ export const useBoardStore = create<BoardStore>((set) => ({
       };
       
       // Emit socket event for real-time collaboration
+      // Note: The backend will sanitize boardName, preserving dashes but replacing other 
+      // non-alphanumeric chars with underscores
+      // See backend/src/socket/fileHandlers.ts and backend/src/app.ts
       socket.emit("update-state", {
         boardName,
         board: {

@@ -3,6 +3,10 @@ import type { FileUploadResponse, BoardState } from '../types';
 
 export const uploadFile = async (file: File, boardName: string): Promise<FileUploadResponse> => {
   try {
+    // Note: The backend will sanitize this boardName, replacing non-alphanumeric chars with underscores
+    // For better debugging, log the original and expected sanitized versions
+    console.log(`Uploading file to board: ${boardName} (will be sanitized to: ${boardName.replace(/[^a-z0-9\-]/gi, '_')})`);
+    
     const formData = new FormData();
     formData.append("file", file);
     formData.append("boardName", boardName);
@@ -25,7 +29,9 @@ export const uploadFile = async (file: File, boardName: string): Promise<FileUpl
 
 export const loadBoardState = async (boardName: string): Promise<BoardState | null> => {
   try {
-    const boardUrl = API_CONFIG.ENDPOINTS.BOARD.replace(':boardName', boardName);
+    // Sanitize board name to match backend sanitization
+    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    const boardUrl = API_CONFIG.ENDPOINTS.BOARD.replace(':boardName', safeBoardName);
     const response = await fetch(`${API_CONFIG.BASE_URL}${boardUrl}`);
 
     if (!response.ok) {

@@ -15,10 +15,18 @@ export const handleFileUpdate = async ({
   try {
     const filePathDecoded = decodeURIComponent(filePath);
     // Use config.uploadsPath instead of hardcoded path
-    const actualPath = path.join(
-      config.uploadsPath,
-      filePathDecoded.replace(/^\/files/, "")
-    );
+    const pathWithoutPrefix = filePathDecoded.replace(/^\/files/, "");
+    
+    // Sanitize path segments to match the upload route sanitization
+    // Split path into segments and sanitize each directory/board name
+    const pathSegments = pathWithoutPrefix.split('/').filter(Boolean);
+    if (pathSegments.length > 0) {
+      // Only sanitize the first segment (boardName)
+      pathSegments[0] = pathSegments[0].replace(/[^a-z0-9\-]/gi, '_');
+    }
+    const sanitizedPath = pathSegments.join('/');
+    
+    const actualPath = path.join(config.uploadsPath, sanitizedPath);
 
     // Ensure the directory exists
     await fs.mkdir(path.dirname(actualPath), { recursive: true });
@@ -41,7 +49,9 @@ export const handleStateUpdate = async (
 ): Promise<void> => {
   try {
     const { board, boardName } = payload;
-    const boardPath = path.join(config.uploadsPath, boardName, `board.json`);
+    // Sanitize board name to prevent directory traversal and ensure consistency with file uploads
+    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    const boardPath = path.join(config.uploadsPath, safeBoardName, `board.json`);
 
     // Ensure the directory exists
     await fs.mkdir(path.dirname(boardPath), { recursive: true });
