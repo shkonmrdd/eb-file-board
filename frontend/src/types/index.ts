@@ -1,4 +1,4 @@
-import { ExcalidrawImperativeAPI, ExcalidrawInitialDataState, AppState } from "@excalidraw/excalidraw/types";
+import { ExcalidrawImperativeAPI, AppState } from "@excalidraw/excalidraw/types";
 import { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import type { DragEvent as ReactDragEvent } from 'react';
 

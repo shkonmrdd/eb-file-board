@@ -5,11 +5,6 @@ import { socket } from "../socket";
 import { debounce } from "lodash";
 import { useFileStore } from "../store/fileStore";
 
-// Move debounce outside component
-const debouncedEmitFileUpdate = debounce((path: string, content: string) => {
-  // This will be handled by the file store now
-}, 100);
-
 const getUrlParameter = (name: string): string | null => {
   const urlParams = new URLSearchParams(location.search);
   return urlParams.get(name) ?? "";

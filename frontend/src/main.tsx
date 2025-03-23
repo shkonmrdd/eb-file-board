@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { socket } from './socket.ts'
-import { useBoardStore, useFileStore } from './store'
+import { useBoardStore } from './store'
 
 // Initialize socket listeners
 const StoreInitializer = () => {

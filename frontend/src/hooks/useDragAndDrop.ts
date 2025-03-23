@@ -1,8 +1,7 @@
-import { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import { useCallback, useEffect, useRef } from 'react';
 import type { DragEvent as ReactDragEvent } from 'react';
 import { useExcalidrawElements } from './useExcalidrawElements';
-import { FileType, Position, FileUploadResponse, UseDragAndDropProps, UseDragAndDropResult } from '../types';
+import { FileType, Position, UseDragAndDropProps, UseDragAndDropResult } from '../types';
 import { useFileStore } from '../store/fileStore';
 import { uploadFile } from '../services/api';
 import { FILE_TYPES, DEFAULT_POSITION } from '../constants/config';

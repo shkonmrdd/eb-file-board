@@ -8,7 +8,7 @@ interface BoardStore {
   currentBoard: string | null;
   boards: Record<string, BoardState>;
   setCurrentBoard: (boardName: string) => void;
-  updateBoard: (boardName: string, elements: ExcalidrawElement[], appState?: AppState) => void;
+  updateBoard: (boardName: string, elements: ExcalidrawElement[], appState: AppState) => void;
   syncBoard: (payload: BoardUpdatePayload) => void;
 }
 

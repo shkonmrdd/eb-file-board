@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { FileType, FileUpdatePayload } from '../types';
+import { FileType } from '../types';
 import { emitFileUpdate } from '../socket';
 
 interface FileInfo {
