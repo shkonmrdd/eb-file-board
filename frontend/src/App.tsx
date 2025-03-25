@@ -113,16 +113,9 @@ function App() {
   return (
     <BrowserRouter>
       <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="flex justify-between items-center p-4 bg-gray-800 shadow-md">
-          <button 
-            onClick={handleLogout} 
-            className="bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black font-medium py-2 px-4 rounded-md transition duration-300 hover:shadow-lg"
-          >
-            Logout
-          </button>
-        </div>
+        {/* Remove the header with logout button */}
         <Routes>
-          <Route path="/:boardName?" element={<Board />} />
+          <Route path="/:boardName?" element={<Board onLogout={handleLogout} />} />
           <Route element={<WithHeaderLayout />}>
             <Route path="/pdf/*" element={<PDFViewerPage />} />
             <Route path="/md/*" element={<MarkdownViewerPage />} />
