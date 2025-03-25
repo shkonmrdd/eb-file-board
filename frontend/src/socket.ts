@@ -20,31 +20,28 @@ interface ClientToServerEvents {
   "update-file": (data: FileUpdatePayload) => void;
 }
 
-// Create typed socket instance with JWT auth
+// Create a socket instance but do not connect immediately
 export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(SOCKET_URL, {
-  auth: {
-    token: getJwtToken()
-  },
-  extraHeaders: {
-    'Authorization': `Bearer ${getJwtToken() || ''}`
-  },
+  autoConnect: false, // Disable auto-connect
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
   withCredentials: true,
-  autoConnect: false // Don't connect automatically, wait until JWT is available
 });
 
 // Connection management
 export const connectSocket = () => {
-  if (!socket.connected && getJwtToken()) {
-    // Update auth with latest token
-    socket.auth = { token: getJwtToken() };
+  const token = getJwtToken();
+  if (token) {
+    // Update auth with the latest token
+    socket.auth = { token };
     socket.io.opts.extraHeaders = {
-      'Authorization': `Bearer ${getJwtToken() || ''}`
+      Authorization: `Bearer ${token}`,
     };
-    
-    console.log('Connecting socket with JWT');
+
+    console.log("Connecting socket with JWT");
     socket.connect();
+  } else {
+    console.warn("Cannot connect socket: No JWT token available");
   }
 };
 

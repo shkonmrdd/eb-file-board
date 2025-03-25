@@ -19,6 +19,7 @@ import {
   getInitialToken,
   setInitialToken
 } from "./services/auth";
+import { connectSocket } from "./socket";
 import LoginForm from "./components/LoginForm";
 
 function App() {
@@ -29,7 +30,6 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // First check if we have a JWT and it's valid
         if (hasJwtToken()) {
           console.log("Found JWT token, verifying...");
           const isValid = await verifyAuth();
@@ -37,23 +37,24 @@ function App() {
             console.log("JWT is valid");
             setIsAuthenticated(true);
             setIsLoading(false);
+            connectSocket(); // Connect WebSocket after successful verification
             return;
           } else {
             console.log("JWT is invalid or expired");
           }
         }
 
-        // No valid JWT, check if we have an initial token
         const initialToken = getInitialToken();
         if (initialToken) {
           console.log("Found initial token, attempting login");
           const loginSuccess = await login(initialToken);
           setIsAuthenticated(loginSuccess);
-          if (!loginSuccess) {
+          if (loginSuccess) {
+            connectSocket(); // Connect WebSocket after successful login
+          } else {
             console.log("Login with initial token failed");
           }
         } else {
-          // No tokens at all, will show login form
           console.log("No tokens found, showing login form");
           setIsAuthenticated(false);
         }
@@ -68,20 +69,20 @@ function App() {
     checkAuth();
   }, []);
 
-  // Handle logout
   const handleLogout = async () => {
     await logout();
     setIsAuthenticated(false);
   };
 
-  // Handle login with token
   const handleLogin = async (token: string) => {
     setIsLoginAttempting(true);
     try {
       setInitialToken(token);
       const loginSuccess = await login(token);
       setIsAuthenticated(loginSuccess);
-      if (!loginSuccess) {
+      if (loginSuccess) {
+        connectSocket(); // Connect WebSocket after successful login
+      } else {
         console.log("Login with provided token failed");
       }
     } finally {
@@ -89,7 +90,6 @@ function App() {
     }
   };
 
-  // Show loading state
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen w-full bg-gray-900">
@@ -101,7 +101,6 @@ function App() {
     );
   }
 
-  // If not authenticated, show login form
   if (!isAuthenticated) {
     return (
       <div className="flex justify-center items-center min-h-screen w-full bg-gray-900">
@@ -113,7 +112,6 @@ function App() {
   return (
     <BrowserRouter>
       <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900">
-        {/* Remove the header with logout button */}
         <Routes>
           <Route path="/:boardName?" element={<Board onLogout={handleLogout} />} />
           <Route element={<WithHeaderLayout />}>
