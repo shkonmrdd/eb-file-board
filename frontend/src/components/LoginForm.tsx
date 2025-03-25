@@ -47,7 +47,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           </label> */}
             <input
               id="token"
-              type="text"
+              type="password"
               value={token}
               onChange={(e) => setToken(e.target.value)}
               className="w-full px-4 py-3 text-gray-800 dark:text-white bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200"
@@ -60,7 +60,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
             type="submit"
             disabled={isLoading}
             className="w-full py-3 px-4 text-black font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: "#ECECF4" }} // Fallback inline style for solid green
+            style={{ backgroundColor: "#ECECF4" }} // Tailwind didn't work here
           >
             <span className="flex items-center justify-center">
               {isLoading ? (
