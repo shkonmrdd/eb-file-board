@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { generateToken, getInitialToken, getExpirationMs } from '../services/auth.service';
+import { generateToken, getInitialToken } from '../services/auth.service';
 import { log } from '../utils';
 
 /**
@@ -24,21 +24,16 @@ export class AuthController {
       // Generate a new JWT for the user
       const jwt = generateToken();
       
-      // Get expiration time in ms
-      const expirationMs = getExpirationMs();
-      
       // Set token in cookie and return in response
       res.cookie('token', jwt, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: expirationMs,
         sameSite: 'strict'
       });
       
       res.json({
         message: 'Authentication successful',
-        token: jwt,
-        expiresIn: Math.floor(expirationMs / 1000) // Convert to seconds for client
+        token: jwt
       });
     } catch (error) {
       log(`Login error: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -61,21 +56,16 @@ export class AuthController {
       // Generate a new token for the authenticated user
       const newToken = generateToken(req.user.userId);
       
-      // Get expiration time in ms
-      const expirationMs = getExpirationMs();
-      
       // Set token in cookie and return in response
       res.cookie('token', newToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: expirationMs,
         sameSite: 'strict'
       });
       
       res.json({
         message: 'Token refreshed successfully',
-        token: newToken,
-        expiresIn: Math.floor(expirationMs / 1000) // Convert to seconds for client
+        token: newToken
       });
     } catch (error) {
       log(`Token refresh error: ${error instanceof Error ? error.message : 'Unknown error'}`);
