@@ -47,7 +47,7 @@ httpServer.listen({
   const authConfig = getAuthConfig();
   
   log("JWT Authentication is enabled.");
-  log(`For initial setup, use this token to login: ${authConfig.initialToken}`);
+  log(`For initial setup, use INITIAL LOGIN TOKEN`);
   log("After login, your browser will receive a JWT that does not expire.");
 });
 
