@@ -3,6 +3,12 @@ import { Excalidraw, MainMenu } from "@excalidraw/excalidraw";
 import { useDragAndDrop } from "../hooks/useDragAndDrop";
 import { useBoardState } from "../hooks/useBoardState";
 import { useState, useEffect } from "react";
+import { LogOut } from "lucide-react";
+
+// Add onLogout prop to the Board component
+interface BoardProps {
+  onLogout?: () => void;
+}
 
 const LoadingScreen = () => (
   <div style={{ 
@@ -17,7 +23,7 @@ const LoadingScreen = () => (
   </div>
 );
 
-const Board = () => {
+const Board: React.FC<BoardProps> = ({ onLogout }) => {
   const params = useParams();
   const boardName = params.boardName ?? "main";
   const [isLoading, setIsLoading] = useState(true);
@@ -88,9 +94,18 @@ const Board = () => {
               <MainMenu.DefaultItems.SaveAsImage />
               <MainMenu.DefaultItems.SearchMenu />
               <MainMenu.DefaultItems.ClearCanvas />
-              <MainMenu.Separator />
               <MainMenu.DefaultItems.ToggleTheme />
+              <MainMenu.Separator />
               <MainMenu.DefaultItems.ChangeCanvasBackground />
+              <MainMenu.Separator />
+              {onLogout && (
+                <MainMenu.Item 
+                  onSelect={onLogout} 
+                  icon={<LogOut color="#555" strokeWidth={1.5} style={{marginLeft: "1px"}} />}
+                >
+                  Logout
+                </MainMenu.Item>
+              )}
             </MainMenu>
           </Excalidraw>
         )}
