@@ -1,11 +1,14 @@
 import express from "express";
 import multer from "multer";
 import cors from "cors";
+import cookieParser from "cookie-parser";
 import { log } from "./utils";
 import { config } from "./config";
 import path from "path";
 import fs from "fs";
-import { apiKeyAuth, ipRestriction } from "./middleware/auth";
+import { ipRestriction } from "./middleware/auth";
+import { authenticateJWT } from "./middleware/jwt.middleware";
+import authRoutes from "./routes/auth.routes";
 
 const app = express();
 
@@ -20,21 +23,29 @@ const corsOrigins = process.env.CORS_ORIGIN ?
 app.use(cors({
   origin: corsOrigins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true,
+  credentials: true, // Important for cookies with JWT
   optionsSuccessStatus: 204,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Debug log for CORS configuration
 log(`CORS configured with allowed origins: ${corsOrigins.join(', ')}`);
 
-// 2. Apply IP restriction after CORS
+// 2. Parse cookies and JSON body
+app.use(cookieParser());
+app.use(express.json());
+
+// 3. Apply IP restriction after CORS
 app.use(ipRestriction);
 
-// 3. Apply API key authentication after CORS and IP restrictions
-app.use(apiKeyAuth);
+// 4. Mount auth routes
+app.use('/auth', authRoutes);
 
-// 4. Serve static files and set up routes
+// 5. Apply JWT authentication for API routes
+app.use('/api', authenticateJWT);
+app.use(config.uploadsRoute, authenticateJWT);
+
+// 6. Serve static files and set up routes
 app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(config.uploadsRoute, express.static(config.uploadsPath));
 

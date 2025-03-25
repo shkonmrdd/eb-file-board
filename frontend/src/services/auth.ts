@@ -1,89 +1,190 @@
 /**
- * Authentication service for the API and WebSocket
+ * Authentication service for the API and WebSocket using JWT
  */
+import axios from 'axios';
+import { API_CONFIG } from '../constants/config';
 
-// Get API token from localStorage or prompt if not available
-const AUTH_TOKEN_KEY = 'ai_file_board_auth_token';
+// Auth token storage
+const JWT_TOKEN_KEY = 'ai_file_board_jwt_token';
+const INITIAL_TOKEN_KEY = 'ai_file_board_initial_token';
+
+// Axios instance for auth requests
+const authApi = axios.create({
+  baseURL: API_CONFIG.BASE_URL,
+  withCredentials: true  // Important for cookies
+});
+
+// Types
+interface AuthResponse {
+  token: string;
+  expiresIn: number;
+  message: string;
+}
+
+interface UserResponse {
+  userId: string;
+  isAuthenticated: boolean;
+}
 
 /**
- * Get the API token from localStorage
+ * Get the JWT token from localStorage
  */
-export const getAuthToken = (): string | null => {
-  return localStorage.getItem(AUTH_TOKEN_KEY);
+export const getJwtToken = (): string | null => {
+  return localStorage.getItem(JWT_TOKEN_KEY);
 };
 
 /**
- * Set the API token in localStorage
+ * Set the JWT token in localStorage
  */
-export const setAuthToken = (token: string): void => {
-  localStorage.setItem(AUTH_TOKEN_KEY, token);
+export const setJwtToken = (token: string): void => {
+  localStorage.setItem(JWT_TOKEN_KEY, token);
 };
 
 /**
- * Clear the API token from localStorage
+ * Get the initial login token
  */
-export const clearAuthToken = (): void => {
-  localStorage.removeItem(AUTH_TOKEN_KEY);
+export const getInitialToken = (): string | null => {
+  return localStorage.getItem(INITIAL_TOKEN_KEY);
 };
 
 /**
- * Check if the auth token exists
+ * Set the initial login token
  */
-export const hasAuthToken = (): boolean => {
-  return !!getAuthToken();
+export const setInitialToken = (token: string): void => {
+  localStorage.setItem(INITIAL_TOKEN_KEY, token);
 };
 
 /**
- * Request the auth token from the user
+ * Clear all auth tokens from localStorage
  */
-export const promptForAuthToken = (): string | null => {
-  const token = prompt('Please enter your API token:');
+export const clearAllTokens = (): void => {
+  localStorage.removeItem(JWT_TOKEN_KEY);
+  localStorage.removeItem(INITIAL_TOKEN_KEY);
+};
+
+/**
+ * Check if the JWT token exists
+ */
+export const hasJwtToken = (): boolean => {
+  return !!getJwtToken();
+};
+
+/**
+ * Request the initial token from the user (one-time setup)
+ */
+export const promptForInitialToken = (): string | null => {
+  const token = prompt('Please enter your initial login token:');
   if (token) {
-    setAuthToken(token);
-    // Show a message so the user can save their token
-    alert(`Your API token has been saved: ${token}\n\nPlease make a note of this token for future use.`);
+    setInitialToken(token);
     return token;
   }
   return null;
 };
 
 /**
- * Get headers with authentication for fetch requests
+ * Get authorization headers for fetch/axios requests
  */
-export const getAuthHeaders = (): Headers => {
-  const headers = new Headers();
-  const token = getAuthToken();
+export const getAuthHeaders = (): Record<string, string> => {
+  const token = getJwtToken();
   if (token) {
-    headers.append('X-API-Key', token);
+    return {
+      'Authorization': `Bearer ${token}`
+    };
   }
-  return headers;
+  return {};
 };
 
 /**
- * Verify the API token with the server
+ * Login with initial token to get JWT
  */
-export const verifyAuthToken = async (token: string): Promise<boolean> => {
+export const login = async (initialToken: string): Promise<boolean> => {
   try {
-    console.log(`Verifying token (starts with ${token.substring(0, 4)}...)`);
+    console.log('Attempting to login with initial token');
+    const response = await authApi.post<AuthResponse>('/auth/login', { token: initialToken });
     
-    // Use API_CONFIG to get the correct base URL
-    const { API_CONFIG } = await import('../constants/config');
-    const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.API}`;
+    if (response.data && response.data.token) {
+      console.log('Login successful, JWT received');
+      setJwtToken(response.data.token);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error('Login failed:', error);
+    return false;
+  }
+};
+
+/**
+ * Refresh the JWT token
+ */
+export const refreshToken = async (): Promise<boolean> => {
+  try {
+    const token = getJwtToken();
+    if (!token) return false;
     
-    console.log(`Making verification request to: ${url}`);
-    
-    const response = await fetch(url, {
-      headers: {
-        'X-API-Key': token
-      }
+    const response = await authApi.post<AuthResponse>('/auth/refresh', {}, {
+      headers: getAuthHeaders()
     });
     
-    const success = response.ok;
-    console.log(`Token verification ${success ? 'succeeded' : 'failed'} with status: ${response.status}`);
-    
-    return success;
-  } catch (error) {
-    console.error('Error verifying token:', error);
+    if (response.data && response.data.token) {
+      setJwtToken(response.data.token);
+      return true;
+    }
     return false;
+  } catch (error) {
+    console.error('Token refresh failed:', error);
+    return false;
+  }
+};
+
+/**
+ * Verify the user is authenticated
+ */
+export const verifyAuth = async (): Promise<boolean> => {
+  try {
+    // If we don't have a token, we're not authenticated
+    if (!hasJwtToken()) return false;
+    
+    // Check if the token is valid by making a request to the user endpoint
+    const response = await authApi.get<UserResponse>('/auth/user', {
+      headers: getAuthHeaders()
+    });
+    
+    return response.data.isAuthenticated === true;
+  } catch (error) {
+    console.error('Auth verification failed:', error);
+    
+    // If the token is invalid, try to refresh it once
+    try {
+      const refreshed = await refreshToken();
+      if (refreshed) {
+        // Try again with the new token
+        const retryResponse = await authApi.get<UserResponse>('/auth/user', {
+          headers: getAuthHeaders()
+        });
+        return retryResponse.data.isAuthenticated === true;
+      }
+    } catch (refreshError) {
+      console.error('Token refresh during verification failed:', refreshError);
+    }
+    
+    return false;
+  }
+};
+
+/**
+ * Logout - clears token and makes logout request
+ */
+export const logout = async (): Promise<void> => {
+  try {
+    if (hasJwtToken()) {
+      await authApi.post('/auth/logout', {}, {
+        headers: getAuthHeaders()
+      });
+    }
+  } catch (error) {
+    console.error('Logout API call failed:', error);
+  } finally {
+    clearAllTokens();
   }
 }; 

@@ -1,6 +1,26 @@
 import { API_CONFIG } from '../constants/config';
 import type { FileUploadResponse, BoardState } from '../types';
-import { getAuthHeaders } from './auth';
+import { getJwtToken } from './auth';
+import { connectSocket } from '../socket';
+import axios from 'axios';
+
+// Create axios instance with auth
+const api = axios.create({
+  baseURL: API_CONFIG.BASE_URL,
+  withCredentials: true
+});
+
+// Ensure auth headers are included with every request
+api.interceptors.request.use(config => {
+  // Add JWT token if available
+  if (getJwtToken()) {
+    const token = getJwtToken();
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  }
+  return config;
+});
 
 export const uploadFile = async (file: File, boardName: string): Promise<FileUploadResponse> => {
   try {
@@ -12,23 +32,16 @@ export const uploadFile = async (file: File, boardName: string): Promise<FileUpl
     formData.append("file", file);
     formData.append("boardName", boardName);
 
-    // Get authentication headers
-    const headers = getAuthHeaders();
-    
-    const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.UPLOAD}`, {
-      method: "POST",
-      body: formData,
-      headers
+    const response = await api.post('/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
     });
 
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        throw new Error('Authentication failed. Please check your API token.');
-      }
-      throw new Error(`Failed to upload file: ${response.status}`);
-    }
+    // Also ensure socket is connected with the current token
+    connectSocket();
 
-    return await response.json();
+    return response.data;
   } catch (error) {
     console.error("Error uploading file:", error);
     throw error;
@@ -41,25 +54,12 @@ export const loadBoardState = async (boardName: string): Promise<BoardState | nu
     const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
     const boardUrl = API_CONFIG.ENDPOINTS.BOARD.replace(':boardName', safeBoardName);
     
-    // Get authentication headers
-    const headers = getAuthHeaders();
-    
-    const response = await fetch(`${API_CONFIG.BASE_URL}${boardUrl}`, {
-      headers
-    });
-
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        throw new Error('Authentication failed. Please check your API token.');
-      }
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error(`Failed to load board state: ${response.status}`);
+    const response = await api.get(boardUrl);
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.status === 404) {
+      return null;
     }
-
-    return await response.json();
-  } catch (error) {
     console.error("Error loading board state:", error);
     throw error;
   }

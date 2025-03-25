@@ -11,60 +11,63 @@ import MarkdownViewerPage from "./pages/MarkdownViewerPage";
 import Board from "./pages/FileBoardPage";
 import WithHeaderLayout from "./layouts/WithHeaderLayout";
 import "@excalidraw/excalidraw/index.css";
-import { hasAuthToken, promptForAuthToken, verifyAuthToken, getAuthToken, clearAuthToken } from "./services/auth";
+import { 
+  hasJwtToken, 
+  promptForInitialToken, 
+  verifyAuth, 
+  login, 
+  logout, 
+  getInitialToken
+} from "./services/auth";
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(hasAuthToken());
+  const [isAuthenticated, setIsAuthenticated] = useState(hasJwtToken());
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // If we don't have a token, prompt for one
-        if (!hasAuthToken()) {
-          console.log("No token found, prompting user");
-          const token = promptForAuthToken();
-          if (token) {
-            console.log("Verifying provided token");
-            const isValid = await verifyAuthToken(token);
-            if (!isValid) {
-              console.log("Token validation failed, clearing token");
-              clearAuthToken();
-            }
-            setIsAuthenticated(isValid);
+        // First check if we have a JWT and it's valid
+        if (hasJwtToken()) {
+          console.log("Found JWT token, verifying...");
+          const isValid = await verifyAuth();
+          if (isValid) {
+            console.log("JWT is valid");
+            setIsAuthenticated(true);
+            setIsLoading(false);
+            return;
           } else {
-            setIsAuthenticated(false);
+            console.log("JWT is invalid or expired");
+          }
+        }
+
+        // No valid JWT, check if we have an initial token
+        const initialToken = getInitialToken();
+        if (initialToken) {
+          console.log("Found initial token, attempting login");
+          const loginSuccess = await login(initialToken);
+          setIsAuthenticated(loginSuccess);
+          if (!loginSuccess) {
+            console.log("Login with initial token failed");
           }
         } else {
-          // Verify existing token
-          const token = getAuthToken();
-          console.log(`Found existing token: ${token?.substring(0, 4)}...`);
-          if (token) {
-            const isValid = await verifyAuthToken(token);
-            if (!isValid) {
-              console.log("Existing token is invalid, prompting for new one");
-              // If token is invalid, prompt for a new one
-              clearAuthToken();
-              const newToken = promptForAuthToken();
-              if (newToken) {
-                console.log("Verifying new token");
-                const newIsValid = await verifyAuthToken(newToken);
-                if (!newIsValid) {
-                  console.log("New token validation failed, clearing token");
-                  clearAuthToken();
-                }
-                setIsAuthenticated(newIsValid);
-              } else {
-                setIsAuthenticated(false);
-              }
-            } else {
-              console.log("Token validated successfully");
-              setIsAuthenticated(true);
+          // No tokens at all, prompt for initial token
+          console.log("No tokens found, prompting for initial token");
+          const newInitialToken = promptForInitialToken();
+          if (newInitialToken) {
+            console.log("Initial token provided, attempting login");
+            const loginSuccess = await login(newInitialToken);
+            setIsAuthenticated(loginSuccess);
+            if (!loginSuccess) {
+              console.log("Login with provided token failed");
             }
           } else {
             setIsAuthenticated(false);
           }
         }
+      } catch (error) {
+        console.error("Authentication check failed:", error);
+        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
@@ -72,6 +75,12 @@ function App() {
 
     checkAuth();
   }, []);
+
+  // Handle logout
+  const handleLogout = async () => {
+    await logout();
+    setIsAuthenticated(false);
+  };
 
   // Show loading state
   if (isLoading) {
@@ -83,16 +92,16 @@ function App() {
     return (
       <div className="auth-required">
         <h1>Authentication Required</h1>
-        <p>You need a valid API token to access this application.</p>
+        <p>You need to provide the initial token to access this application.</p>
         <button onClick={() => {
-          const token = promptForAuthToken();
+          const token = promptForInitialToken();
           if (token) {
-            verifyAuthToken(token).then(isValid => {
-              setIsAuthenticated(isValid);
+            login(token).then(success => {
+              setIsAuthenticated(success);
             });
           }
         }}>
-          Enter API Token
+          Enter Initial Token
         </button>
       </div>
     );
@@ -100,14 +109,19 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/:boardName?" element={<Board />} />
-        <Route element={<WithHeaderLayout />}>
-          <Route path="/pdf/*" element={<PDFViewerPage />} />
-          <Route path="/md/*" element={<MarkdownViewerPage />} />
-        </Route>
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <div className="app-container">
+        <div className="app-header">
+          <button onClick={handleLogout} className="logout-button">Logout</button>
+        </div>
+        <Routes>
+          <Route path="/:boardName?" element={<Board />} />
+          <Route element={<WithHeaderLayout />}>
+            <Route path="/pdf/*" element={<PDFViewerPage />} />
+            <Route path="/md/*" element={<MarkdownViewerPage />} />
+          </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
     </BrowserRouter>
   );
 }

@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { BoardUpdatePayload, FileUpdatePayload } from "./types";
-import { getAuthToken, promptForAuthToken } from "./services/auth";
+import { getJwtToken, login, promptForInitialToken } from "./services/auth";
 
 // Determine the appropriate socket URL based on the environment
 // In development mode, use the backend server URL explicitly
@@ -20,60 +20,91 @@ interface ClientToServerEvents {
   "update-file": (data: FileUpdatePayload) => void;
 }
 
-// Get auth token or prompt for it
-const token = getAuthToken();
-console.log("Initial auth token:", token ? "Found in localStorage" : "Not found");
-
-if (!token) {
-  console.log("No token found, prompting user");
-  const newToken = promptForAuthToken();
-  if (newToken) {
-    console.log("Token provided by user");
-  } else {
-    console.warn("User did not provide a token");
-  }
-}
-
-// Create typed socket instance with auth
+// Create typed socket instance with JWT auth
 export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(SOCKET_URL, {
   auth: {
-    token: getAuthToken()
+    token: getJwtToken()
   },
   extraHeaders: {
-    "X-API-Key": getAuthToken() || ""
+    'Authorization': `Bearer ${getJwtToken() || ''}`
   },
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
-  withCredentials: true
+  withCredentials: true,
+  autoConnect: false // Don't connect automatically, wait until JWT is available
 });
 
-// Add connection event handlers
+// Connection management
+export const connectSocket = () => {
+  if (!socket.connected && getJwtToken()) {
+    // Update auth with latest token
+    socket.auth = { token: getJwtToken() };
+    socket.io.opts.extraHeaders = {
+      'Authorization': `Bearer ${getJwtToken() || ''}`
+    };
+    
+    console.log('Connecting socket with JWT');
+    socket.connect();
+  }
+};
+
+// Connection status events
 socket.on("connect", () => {
   console.log("Socket connected successfully");
 });
 
 // Handle connection error (likely auth issues)
-socket.on("connect_error", (err) => {
+socket.on("connect_error", async (err) => {
   console.error("Socket connection error:", err.message);
   
-  // If auth error, prompt for token again
+  // If auth error, try to get a new token
   if (err.message.includes("Authentication")) {
-    console.log("Authentication error detected, prompting for new token");
-    const newToken = promptForAuthToken();
-    if (newToken) {
-      console.log("New token provided, reconnecting...");
-      // Update auth and reconnect
-      socket.auth = { token: newToken };
-      socket.io.opts.extraHeaders = {
-        "X-API-Key": newToken
-      };
-      socket.connect();
-    } else {
-      console.warn("User cancelled token input");
+    console.log("Authentication error detected");
+    
+    // Try to login with initial token if available
+    const initialToken = promptForInitialToken();
+    if (initialToken) {
+      console.log("Initial token provided, attempting login");
+      const success = await login(initialToken);
+      
+      if (success) {
+        console.log("Login successful, reconnecting socket with new JWT");
+        // Update auth and reconnect
+        socket.auth = { token: getJwtToken() };
+        socket.io.opts.extraHeaders = {
+          'Authorization': `Bearer ${getJwtToken() || ''}`
+        };
+        socket.connect();
+      } else {
+        console.warn("Login failed, socket will remain disconnected");
+      }
     }
   }
 });
 
+// Disconnection events
+socket.on("disconnect", (reason) => {
+  console.log(`Socket disconnected: ${reason}`);
+  
+  // Reconnect if we have a token and it wasn't a manual disconnection
+  if (reason !== "io client disconnect" && getJwtToken()) {
+    setTimeout(() => {
+      console.log("Attempting to reconnect socket");
+      connectSocket();
+    }, 2000);
+  }
+});
+
+// API
 export const emitFileUpdate = (path: string, content: string): void => {
-  socket.emit("update-file", { path, content });
+  if (!socket.connected) {
+    console.warn("Socket not connected, attempting to connect");
+    connectSocket();
+    // Queue the update to be sent after connection
+    socket.once("connect", () => {
+      socket.emit("update-file", { path, content });
+    });
+  } else {
+    socket.emit("update-file", { path, content });
+  }
 };
