@@ -2,7 +2,8 @@ export const API_CONFIG = {
   BASE_URL: import.meta.env.PROD ? '' : 'http://localhost:3001',
   ENDPOINTS: {
     UPLOAD: '/upload',
-    BOARD: '/files/:boardName/board.json'
+    BOARD: '/files/:boardName/board.json',
+    API: '/api'
   }
 } as const;
 

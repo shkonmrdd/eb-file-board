@@ -5,13 +5,37 @@ import { log } from "./utils";
 import { config } from "./config";
 import path from "path";
 import fs from "fs";
+import { apiKeyAuth, ipRestriction } from "./middleware/auth";
 
 const app = express();
-app.use(cors());
 
-// Serve the static files from the public directory (frontend build)
+// Determine appropriate CORS origin based on environment
+const corsOrigins = process.env.CORS_ORIGIN ? 
+  process.env.CORS_ORIGIN.split(',') : 
+  (process.env.NODE_ENV === 'production' ? 
+    ['http://localhost:3001'] : 
+    ['http://localhost:5173', 'http://localhost:3001']);
+
+// 1. Configure CORS first - this must come before authentication to allow preflight requests
+app.use(cors({
+  origin: corsOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+  optionsSuccessStatus: 204,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key']
+}));
+
+// Debug log for CORS configuration
+log(`CORS configured with allowed origins: ${corsOrigins.join(', ')}`);
+
+// 2. Apply IP restriction after CORS
+app.use(ipRestriction);
+
+// 3. Apply API key authentication after CORS and IP restrictions
+app.use(apiKeyAuth);
+
+// 4. Serve static files and set up routes
 app.use(express.static(path.join(process.cwd(), 'public')));
-
 app.use(config.uploadsRoute, express.static(config.uploadsPath));
 
 app.use((req, res, next) => {
