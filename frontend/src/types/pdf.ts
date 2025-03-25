@@ -25,4 +25,4 @@ export interface PDFRenderContext {
 // Route params for PDF pages
 export interface PDFViewerPageParams {
   url: string | null;
-} 
+}

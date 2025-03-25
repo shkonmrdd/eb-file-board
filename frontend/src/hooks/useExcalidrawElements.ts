@@ -1,6 +1,6 @@
-import { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
-import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
-import { FileType, Position } from "../types";
+import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
+import { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
+import { FileType, Position } from '../types';
 
 interface ElementConfig {
   x: number;
@@ -13,7 +13,7 @@ interface ElementConfig {
 export const useExcalidrawElements = () => {
   const createEmbeddableElement = (config: ElementConfig): ExcalidrawElement => ({
     id: crypto.randomUUID(),
-    type: "embeddable",
+    type: 'embeddable',
     x: config.x,
     y: config.y,
     width: config.width ?? 1024,
@@ -21,10 +21,10 @@ export const useExcalidrawElements = () => {
     link: config.link,
     // @ts-expect-error - This is a valid property
     roundness: { type: 0, value: 0 },
-    strokeColor: "transparent",
-    strokeStyle: "solid",
-    backgroundColor: "white",
-    fillStyle: "solid",
+    strokeColor: 'transparent',
+    strokeStyle: 'solid',
+    backgroundColor: 'white',
+    fillStyle: 'solid',
     strokeWidth: 1,
     opacity: 100,
     angle: 0,
@@ -34,7 +34,7 @@ export const useExcalidrawElements = () => {
   const createFileElement = (
     type: FileType,
     link: string,
-    position: Position
+    position: Position,
   ): ExcalidrawElement[] => {
     const config: Record<FileType, (link: string) => ElementConfig> = {
       txt: (link) => ({
@@ -64,17 +64,17 @@ export const useExcalidrawElements = () => {
     excalidrawAPI: ExcalidrawImperativeAPI,
     type: FileType,
     link: string,
-    pos: Position
+    pos: Position,
   ): void => {
     try {
       const elements = createFileElement(type, link, pos);
       const oldElements = excalidrawAPI?.getSceneElements() ?? [];
-      
+
       excalidrawAPI?.updateScene({
         elements: [...elements, ...oldElements],
       });
     } catch (error) {
-      console.error("Failed to create element:", error);
+      console.error('Failed to create element:', error);
     }
   };
 

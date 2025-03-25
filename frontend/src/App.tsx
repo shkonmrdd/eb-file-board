@@ -1,26 +1,21 @@
-import {
-  BrowserRouter,
-  Navigate,
-  Route,
-  Routes,
-} from "react-router-dom";
-import { useEffect, useState } from "react";
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
-import PDFViewerPage from "./pages/PDFViewerPage";
-import MarkdownViewerPage from "./pages/MarkdownViewerPage";
-import Board from "./pages/FileBoardPage";
-import WithHeaderLayout from "./layouts/WithHeaderLayout";
-import "@excalidraw/excalidraw/index.css";
-import { 
-  hasJwtToken, 
-  verifyAuth, 
-  login, 
-  logout, 
+import PDFViewerPage from './pages/PDFViewerPage';
+import MarkdownViewerPage from './pages/MarkdownViewerPage';
+import Board from './pages/FileBoardPage';
+import WithHeaderLayout from './layouts/WithHeaderLayout';
+import '@excalidraw/excalidraw/index.css';
+import {
+  hasJwtToken,
+  verifyAuth,
+  login,
+  logout,
   getInitialToken,
-  setInitialToken
-} from "./services/auth";
-import { connectSocket } from "./socket";
-import LoginForm from "./components/LoginForm";
+  setInitialToken,
+} from './services/auth';
+import { connectSocket } from './socket';
+import LoginForm from './components/LoginForm';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(hasJwtToken());
@@ -31,35 +26,35 @@ function App() {
     const checkAuth = async () => {
       try {
         if (hasJwtToken()) {
-          console.log("Found JWT token, verifying...");
+          console.log('Found JWT token, verifying...');
           const isValid = await verifyAuth();
           if (isValid) {
-            console.log("JWT is valid");
+            console.log('JWT is valid');
             setIsAuthenticated(true);
             setIsLoading(false);
             connectSocket(); // Connect WebSocket after successful verification
             return;
           } else {
-            console.log("JWT is invalid or expired");
+            console.log('JWT is invalid or expired');
           }
         }
 
         const initialToken = getInitialToken();
         if (initialToken) {
-          console.log("Found initial token, attempting login");
+          console.log('Found initial token, attempting login');
           const loginSuccess = await login(initialToken);
           setIsAuthenticated(loginSuccess);
           if (loginSuccess) {
             connectSocket(); // Connect WebSocket after successful login
           } else {
-            console.log("Login with initial token failed");
+            console.log('Login with initial token failed');
           }
         } else {
-          console.log("No tokens found, showing login form");
+          console.log('No tokens found, showing login form');
           setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error("Authentication check failed:", error);
+        console.error('Authentication check failed:', error);
         setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
@@ -83,7 +78,7 @@ function App() {
       if (loginSuccess) {
         connectSocket(); // Connect WebSocket after successful login
       } else {
-        console.log("Login with provided token failed");
+        console.log('Login with provided token failed');
       }
     } finally {
       setIsLoginAttempting(false);

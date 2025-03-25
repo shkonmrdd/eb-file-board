@@ -1,9 +1,9 @@
-import { useParams } from "react-router";
-import { Excalidraw, MainMenu } from "@excalidraw/excalidraw";
-import { useDragAndDrop } from "../hooks/useDragAndDrop";
-import { useBoardState } from "../hooks/useBoardState";
-import { useState, useEffect } from "react";
-import { LogOut } from "lucide-react";
+import { useParams } from 'react-router';
+import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
+import { useDragAndDrop } from '../hooks/useDragAndDrop';
+import { useBoardState } from '../hooks/useBoardState';
+import { useState, useEffect } from 'react';
+import { LogOut } from 'lucide-react';
 
 // Add onLogout prop to the Board component
 interface BoardProps {
@@ -11,24 +11,27 @@ interface BoardProps {
 }
 
 const LoadingScreen = () => (
-  <div style={{ 
-    width: "100%", 
-    height: "100%", 
-    display: "flex", 
-    justifyContent: "center", 
-    alignItems: "center",
-    color: "#888"
-  }}>
+  <div
+    style={{
+      width: '100%',
+      height: '100%',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      color: '#888',
+    }}
+  >
     Loading board...
   </div>
 );
 
 const Board: React.FC<BoardProps> = ({ onLogout }) => {
   const params = useParams();
-  const boardName = params.boardName ?? "main";
+  const boardName = params.boardName ?? 'main';
   const [isLoading, setIsLoading] = useState(true);
-  
-  const { excalidrawAPI, setExcalidrawAPI, initialState, debouncedUpdateState } = useBoardState(boardName);
+
+  const { excalidrawAPI, setExcalidrawAPI, initialState, debouncedUpdateState } =
+    useBoardState(boardName);
   const { handleDrop, cursorPositionRef } = useDragAndDrop({
     excalidrawAPI,
     boardName,
@@ -45,10 +48,10 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
       <div
         id="app"
         style={{
-          width: "100vw",
-          height: "100vh",
-          display: "flex",
-          position: "relative",
+          width: '100vw',
+          height: '100vh',
+          display: 'flex',
+          position: 'relative',
         }}
       >
         {isLoading ? (
@@ -77,9 +80,7 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
                 zenModeEnabled: false,
                 theme:
                   initialState?.appState?.theme ||
-                  (window.matchMedia("(prefers-color-scheme: dark)").matches
-                    ? "dark"
-                    : "light"),
+                  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
               },
               files: initialState?.files,
             }}
@@ -99,9 +100,9 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
               <MainMenu.DefaultItems.ChangeCanvasBackground />
               <MainMenu.Separator />
               {onLogout && (
-                <MainMenu.Item 
-                  onSelect={onLogout} 
-                  icon={<LogOut color="#555" strokeWidth={1.5} style={{marginLeft: "1px"}} />}
+                <MainMenu.Item
+                  onSelect={onLogout}
+                  icon={<LogOut color="#555" strokeWidth={1.5} style={{ marginLeft: '1px' }} />}
                 >
                   Logout
                 </MainMenu.Item>
