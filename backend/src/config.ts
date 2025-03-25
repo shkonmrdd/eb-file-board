@@ -19,6 +19,8 @@ export const config = {
 };
 
 // Ensure the configuration is loaded only once
+console.log('\nEB File Board\n');
+console.log(`Running in ${process.env.NODE_ENV || 'development'} mode`);
 console.log(`Server configuration loaded:`);
 console.log(`- Files storage location: ${config.uploadsPath}`);
 console.log(`- Files access route: ${config.uploadsRoute}`);

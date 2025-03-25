@@ -4,7 +4,7 @@ import { app } from "./app";
 import { initializeSocket } from "./socket/socket";
 import { log } from "./utils";
 import { authenticateSocketJWT } from "./middleware/jwt.middleware";
-import { getAuthConfig } from "./services/auth.service";
+import { getInitialToken } from "./services/auth.service";
 
 const port = process.env.PORT || 3001;
 const httpServer = http.createServer(app);
@@ -43,8 +43,8 @@ httpServer.listen({
 }, () => {
   log(`Server running on port ${port}, bound to 127.0.0.1 (localhost only)`);
   
-  // Get auth configuration
-  const authConfig = getAuthConfig();
+  // Get initial token
+  getInitialToken();
   
   log("JWT Authentication is enabled.");
   log(`For initial setup, use INITIAL LOGIN TOKEN`);
