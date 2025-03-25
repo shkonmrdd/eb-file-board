@@ -6,7 +6,6 @@ import { log } from "./utils";
 import { config } from "./config";
 import path from "path";
 import fs from "fs";
-import { ipRestriction } from "./middleware/auth";
 import { authenticateJWT } from "./middleware/jwt.middleware";
 import authRoutes from "./routes/auth.routes";
 
@@ -35,17 +34,14 @@ log(`CORS configured with allowed origins: ${corsOrigins.join(', ')}`);
 app.use(cookieParser());
 app.use(express.json());
 
-// 3. Apply IP restriction after CORS
-app.use(ipRestriction);
-
-// 4. Mount auth routes
+// 3. Mount auth routes
 app.use('/auth', authRoutes);
 
-// 5. Apply JWT authentication for API routes
+// 4. Apply JWT authentication for API routes
 app.use('/api', authenticateJWT);
 app.use(config.uploadsRoute, authenticateJWT);
 
-// 6. Serve static files and set up routes
+// 5. Serve static files and set up routes
 app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(config.uploadsRoute, express.static(config.uploadsPath));
 
