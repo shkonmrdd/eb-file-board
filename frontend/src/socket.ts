@@ -1,6 +1,6 @@
 import { io, Socket } from "socket.io-client";
 import { BoardUpdatePayload, FileUpdatePayload } from "./types";
-import { getJwtToken, login, promptForInitialToken } from "./services/auth";
+import { getJwtToken, login, getInitialToken } from "./services/auth";
 
 // Determine the appropriate socket URL based on the environment
 // In development mode, use the backend server URL explicitly
@@ -57,14 +57,14 @@ socket.on("connect", () => {
 socket.on("connect_error", async (err) => {
   console.error("Socket connection error:", err.message);
   
-  // If auth error, try to get a new token
+  // If auth error, try to use the initial token if available
   if (err.message.includes("Authentication")) {
     console.log("Authentication error detected");
     
-    // Try to login with initial token if available
-    const initialToken = promptForInitialToken();
+    // Try to login with stored initial token if available
+    const initialToken = getInitialToken();
     if (initialToken) {
-      console.log("Initial token provided, attempting login");
+      console.log("Initial token found, attempting login");
       const success = await login(initialToken);
       
       if (success) {
@@ -77,7 +77,13 @@ socket.on("connect_error", async (err) => {
         socket.connect();
       } else {
         console.warn("Login failed, socket will remain disconnected");
+        // We'll need to wait for the user to re-enter credentials via the login form
+        // This will happen automatically when they refresh or navigate to a protected route
       }
+    } else {
+      console.warn("No initial token available, user will need to log in via the login form");
+      // Force a page reload to show the login form if we're on a protected route
+      window.location.reload();
     }
   }
 });

@@ -3,7 +3,7 @@ import {
   Navigate,
   Route,
   Routes,
-} from "react-router";
+} from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import PDFViewerPage from "./pages/PDFViewerPage";
@@ -13,16 +13,18 @@ import WithHeaderLayout from "./layouts/WithHeaderLayout";
 import "@excalidraw/excalidraw/index.css";
 import { 
   hasJwtToken, 
-  promptForInitialToken, 
   verifyAuth, 
   login, 
   logout, 
-  getInitialToken
+  getInitialToken,
+  setInitialToken
 } from "./services/auth";
+import LoginForm from "./components/LoginForm";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(hasJwtToken());
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoginAttempting, setIsLoginAttempting] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -51,19 +53,9 @@ function App() {
             console.log("Login with initial token failed");
           }
         } else {
-          // No tokens at all, prompt for initial token
-          console.log("No tokens found, prompting for initial token");
-          const newInitialToken = promptForInitialToken();
-          if (newInitialToken) {
-            console.log("Initial token provided, attempting login");
-            const loginSuccess = await login(newInitialToken);
-            setIsAuthenticated(loginSuccess);
-            if (!loginSuccess) {
-              console.log("Login with provided token failed");
-            }
-          } else {
-            setIsAuthenticated(false);
-          }
+          // No tokens at all, will show login form
+          console.log("No tokens found, showing login form");
+          setIsAuthenticated(false);
         }
       } catch (error) {
         console.error("Authentication check failed:", error);
@@ -82,36 +74,52 @@ function App() {
     setIsAuthenticated(false);
   };
 
+  // Handle login with token
+  const handleLogin = async (token: string) => {
+    setIsLoginAttempting(true);
+    try {
+      setInitialToken(token);
+      const loginSuccess = await login(token);
+      setIsAuthenticated(loginSuccess);
+      if (!loginSuccess) {
+        console.log("Login with provided token failed");
+      }
+    } finally {
+      setIsLoginAttempting(false);
+    }
+  };
+
   // Show loading state
   if (isLoading) {
-    return <div className="auth-loading">Verifying authentication...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen w-full bg-gray-900">
+        <div className="flex flex-col items-center p-8">
+          <div className="w-16 h-16 border-t-4 border-gray-500 border-solid rounded-full animate-spin mb-4"></div>
+          <p className="text-xl text-gray-300">Verifying authentication...</p>
+        </div>
+      </div>
+    );
   }
 
-  // If not authenticated, show authentication screen
+  // If not authenticated, show login form
   if (!isAuthenticated) {
     return (
-      <div className="auth-required">
-        <h1>Authentication Required</h1>
-        <p>You need to provide the initial token to access this application.</p>
-        <button onClick={() => {
-          const token = promptForInitialToken();
-          if (token) {
-            login(token).then(success => {
-              setIsAuthenticated(success);
-            });
-          }
-        }}>
-          Enter Initial Token
-        </button>
+      <div className="flex justify-center items-center min-h-screen w-full bg-gray-900">
+        <LoginForm onLogin={handleLogin} isLoading={isLoginAttempting} />
       </div>
     );
   }
 
   return (
     <BrowserRouter>
-      <div className="app-container">
-        <div className="app-header">
-          <button onClick={handleLogout} className="logout-button">Logout</button>
+      <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="flex justify-between items-center p-4 bg-gray-800 shadow-md">
+          <button 
+            onClick={handleLogout} 
+            className="bg-black hover:bg-gray-800 dark:bg-white dark:hover:bg-gray-200 text-white dark:text-black font-medium py-2 px-4 rounded-md transition duration-300 hover:shadow-lg"
+          >
+            Logout
+          </button>
         </div>
         <Routes>
           <Route path="/:boardName?" element={<Board />} />

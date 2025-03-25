@@ -70,18 +70,6 @@ export const hasJwtToken = (): boolean => {
 };
 
 /**
- * Request the initial token from the user (one-time setup)
- */
-export const promptForInitialToken = (): string | null => {
-  const token = prompt('Please enter your initial login token:');
-  if (token) {
-    setInitialToken(token);
-    return token;
-  }
-  return null;
-};
-
-/**
  * Get authorization headers for fetch/axios requests
  */
 export const getAuthHeaders = (): Record<string, string> => {
