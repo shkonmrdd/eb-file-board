@@ -1,12 +1,17 @@
+import React from "react";
 import { useLocation } from "react-router";
 import PDFViewer from "../components/LocalPDFViewer";
+import { PDFViewerPageParams } from "../types/pdf";
 
-function PDFViewerPage() {
+function PDFViewerPage(): React.ReactElement {
   const location = useLocation();
   const urlParams = new URLSearchParams(location.search);
 
-  const url = urlParams.get("url") ?? "";
-  console.log('PDF URL:', url);
+  const params: PDFViewerPageParams = {
+    url: urlParams.get("url")
+  };
+  
+  console.log('PDF URL:', params.url);
 
   return (
     <div
@@ -15,7 +20,7 @@ function PDFViewerPage() {
         height: "100vh",
       }}
     >
-      <PDFViewer url={url} />
+      <PDFViewer url={params.url || ""} />
     </div>
   );
 }

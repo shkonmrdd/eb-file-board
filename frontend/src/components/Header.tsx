@@ -7,9 +7,17 @@ const Header: React.FC = () => {
   const urlParams = new URLSearchParams(location.search);
   const fileUrl = urlParams.get("url");
 
-  // parse the fileURL
-  const fileURL = new URL(fileUrl ?? "");
-  const fileName = decodeURI(fileURL.pathname);
+  // Only try to parse URL if fileUrl exists
+  let fileName = "";
+  if (fileUrl) {
+    try {
+      const fileURL = new URL(fileUrl);
+      fileName = decodeURI(fileURL.pathname);
+    } catch (error) {
+      console.error("Invalid URL format:", error);
+      fileName = fileUrl; // Fallback to the raw string if URL parsing fails
+    }
+  }
 
   return (
     <div className={styles.header}>

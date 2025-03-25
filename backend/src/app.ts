@@ -41,7 +41,7 @@ app.post("/upload", upload.single("file"), (req, res): void => {
   }
 
   // Sanitize board name to prevent directory traversal
-  const safeBoardName = boardName.replace(/[^a-z0-9]/gi, '_');
+  const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
   
   // Create board directory if it doesn't exist
   const boardPath = path.join(config.uploadsPath, safeBoardName);

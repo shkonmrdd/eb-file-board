@@ -11,6 +11,7 @@ const wss = new Server(httpServer, {
     origin: "*",
     methods: ["GET", "POST"],
   },
+  maxHttpBufferSize: 100 * 1024 * 1024, // 50MB payload limit
 });
 
 initializeSocket(wss);
