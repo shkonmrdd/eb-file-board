@@ -2,43 +2,36 @@ import React, { useEffect, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFViewerProps, PDFDocumentState, PDFRenderContext } from '../types/pdf';
 
-const pdfWorkerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.mjs',
-    import.meta.url
-).toString();
+const pdfWorkerSrc = new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url).toString();
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
-const PDFViewer: React.FC<PDFViewerProps> = ({
-  url,
-  width = '100%',
-  height = '100%',
-}) => {
+const PDFViewer: React.FC<PDFViewerProps> = ({ url, width = '100%', height = '100%' }) => {
   const [state, setState] = useState<PDFDocumentState>({
     loading: true,
     error: null,
     scale: 4,
     pdfDoc: null,
-    pageCanvases: []
+    pageCanvases: [],
   });
 
   // Load the PDF document
   useEffect(() => {
     if (!url) return;
-    
-    setState(prev => ({ ...prev, loading: true, error: null }));
-    
+
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+
     const loadingTask = pdfjsLib.getDocument(url);
-    
+
     loadingTask.promise
-      .then(doc => {
-        setState(prev => ({ ...prev, pdfDoc: doc, loading: false }));
+      .then((doc) => {
+        setState((prev) => ({ ...prev, pdfDoc: doc, loading: false }));
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Error loading PDF:', err);
-        setState(prev => ({ ...prev, loading: false }));
+        setState((prev) => ({ ...prev, loading: false }));
       });
-      
+
     return () => {
       if (loadingTask.destroy) loadingTask.destroy();
     };
@@ -50,36 +43,36 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
 
     const renderAllPages = async (): Promise<void> => {
       const canvases: HTMLCanvasElement[] = [];
-      
+
       try {
         // We already checked that state.pdfDoc is not null above
-        const doc = state.pdfDoc!; 
-        
+        const doc = state.pdfDoc!;
+
         for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
           const page = await doc.getPage(pageNum);
           const viewport = page.getViewport({ scale: state.scale });
-          
+
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
-          
+
           if (!context) continue;
-          
+
           canvas.height = viewport.height;
           canvas.width = viewport.width;
-          
+
           const renderContext: PDFRenderContext = {
             canvasContext: context,
-            viewport: viewport
+            viewport: viewport,
           };
-          
+
           await page.render(renderContext).promise;
           canvases.push(canvas);
         }
-        
-        setState(prev => ({ ...prev, pageCanvases: canvases }));
+
+        setState((prev) => ({ ...prev, pageCanvases: canvases }));
       } catch (err) {
         console.error('Error rendering pages:', err);
-        setState(prev => ({ ...prev, error: 'Failed to render pages' }));
+        setState((prev) => ({ ...prev, error: 'Failed to render pages' }));
       }
     };
 
@@ -92,17 +85,25 @@ const PDFViewer: React.FC<PDFViewerProps> = ({
     <div style={{ width, height, overflow: 'auto' }}>
       {loading && <div style={{ textAlign: 'center', padding: '20px' }}>Loading PDF...</div>}
       {error && <div style={{ textAlign: 'center', color: 'red', padding: '20px' }}>{error}</div>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center', padding: '0px' }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+          alignItems: 'center',
+          padding: '0px',
+        }}
+      >
         {pageCanvases.map((canvas, index) => (
-          <div 
+          <div
             key={index}
             style={{
               boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              maxWidth: '100%'
+              maxWidth: '100%',
             }}
           >
-            <img 
-              src={canvas.toDataURL()} 
+            <img
+              src={canvas.toDataURL()}
               alt={`Page ${index + 1}`}
               style={{ maxWidth: '100%', height: 'auto' }}
             />

@@ -1,5 +1,5 @@
-import { ExcalidrawImperativeAPI, AppState } from "@excalidraw/excalidraw/types";
-import { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
+import { ExcalidrawImperativeAPI, AppState } from '@excalidraw/excalidraw/types';
+import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import type { DragEvent as ReactDragEvent } from 'react';
 
 // Board types
@@ -59,6 +59,11 @@ export interface UseDragAndDropResult {
 export interface BoardStore {
   boards: Record<string, BoardState>;
   currentBoard: string | null;
-  updateBoard: (boardName: string, elements: ExcalidrawElement[], appState: AppState, files?: Record<string, FileData>) => void;
+  updateBoard: (
+    boardName: string,
+    elements: ExcalidrawElement[],
+    appState: AppState,
+    files?: Record<string, FileData>,
+  ) => void;
   setCurrentBoard: (boardName: string) => void;
-} 
+}

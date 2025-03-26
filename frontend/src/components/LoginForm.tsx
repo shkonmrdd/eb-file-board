@@ -1,26 +1,23 @@
-import React, { useState } from "react";
-import { Lock, Unlock } from "lucide-react";
+import React, { useState } from 'react';
+import { Lock, Unlock } from 'lucide-react';
 
 interface LoginFormProps {
   onLogin: (token: string) => void;
   isLoading?: boolean;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({
-  onLogin,
-  isLoading = false,
-}) => {
-  const [token, setToken] = useState("");
-  const [error, setError] = useState("");
+const LoginForm: React.FC<LoginFormProps> = ({ onLogin, isLoading = false }) => {
+  const [token, setToken] = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!token.trim()) {
-      setError("Please enter your token");
+      setError('Please enter your token');
       return;
     }
 
-    setError("");
+    setError('');
     onLogin(token);
   };
 
@@ -60,7 +57,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
             type="submit"
             disabled={isLoading}
             className="w-full py-3 px-4 text-black font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ backgroundColor: "#ECECF4" }} // Tailwind didn't work here
+            style={{ backgroundColor: '#ECECF4' }} // Tailwind didn't work here
           >
             <span className="flex items-center justify-center">
               {isLoading ? (

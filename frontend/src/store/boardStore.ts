@@ -8,16 +8,21 @@ interface BoardStore {
   currentBoard: string | null;
   boards: Record<string, BoardState>;
   setCurrentBoard: (boardName: string) => void;
-  updateBoard: (boardName: string, elements: ExcalidrawElement[], appState: AppState, files?: Record<string, FileData>) => void;
+  updateBoard: (
+    boardName: string,
+    elements: ExcalidrawElement[],
+    appState: AppState,
+    files?: Record<string, FileData>,
+  ) => void;
   syncBoard: (payload: BoardUpdatePayload) => void;
 }
 
 export const useBoardStore = create<BoardStore>((set) => ({
   currentBoard: null,
   boards: {},
-  
+
   setCurrentBoard: (boardName) => set({ currentBoard: boardName }),
-  
+
   updateBoard: (boardName, elements, appState, files = {}) => {
     set((state) => {
       const updatedBoards = {
@@ -25,33 +30,33 @@ export const useBoardStore = create<BoardStore>((set) => ({
         [boardName]: {
           elements,
           appState,
-          files
-        }
+          files,
+        },
       };
-      
+
       // Emit socket event for real-time collaboration
-      // Note: The backend will sanitize boardName, preserving dashes but replacing other 
+      // Note: The backend will sanitize boardName, preserving dashes but replacing other
       // non-alphanumeric chars with underscores
       // See backend/src/socket/fileHandlers.ts and backend/src/app.ts
-      socket.emit("update-state", {
+      socket.emit('update-state', {
         boardName,
         board: {
           elements,
           appState,
-          files
-        }
+          files,
+        },
       });
-      
+
       return { boards: updatedBoards };
     });
   },
-  
+
   syncBoard: (payload) => {
     set((state) => ({
       boards: {
         ...state.boards,
-        [payload.boardName]: payload.board
-      }
+        [payload.boardName]: payload.board,
+      },
     }));
-  }
-})); 
+  },
+}));

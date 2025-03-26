@@ -2,19 +2,16 @@ import http from "http";
 import { Server } from "socket.io";
 import { app } from "./app";
 import { initializeSocket } from "./socket/socket";
-import { log } from "./utils";
+import { log, getCorsOrigins } from "./utils";
 import { authenticateSocketJWT } from "./middleware/jwt.middleware";
 import { getInitialToken } from "./services/auth.service";
 
 const port = process.env.PORT || 3001;
+const host = process.env.HOST || '127.0.0.1';
 const httpServer = http.createServer(app);
 
-// Determine appropriate CORS origin based on environment
-const corsOrigins = process.env.CORS_ORIGIN ? 
-  process.env.CORS_ORIGIN.split(',') : 
-  (process.env.NODE_ENV === 'production' ? 
-    ['http://localhost:3001'] : 
-    ['http://localhost:5173', 'http://localhost:3001']);
+const corsOrigins = getCorsOrigins();
+console.log(`WebSocket CORS configured with allowed origins: ${corsOrigins.join(', ')}`);
 
 const wss = new Server(httpServer, {
   cors: {
@@ -36,12 +33,26 @@ wss.use((socket, next) => {
 
 initializeSocket(wss);
 
-// Only bind to localhost to prevent external access
+if (process.env.NODE_ENV === 'production') {
+  if (!process.env.JWT_SECRET) {
+    console.log("ERROR:\nJWT_SECRET env variable is not set. Exiting...");
+    process.exit(1);
+  }
+  if (process.env.JWT_SECRET.length < 32) {
+    console.log("ERROR:\nJWT_SECRET env variable is short. Please set a secure secret to run this app.");
+    process.exit(1);
+  }
+  if (!process.env.HOST) {
+    console.log("ERROR:\nHOST env variable is not set. Exiting...");
+    process.exit(1);
+  }
+}
+// This makes the server accessible from outside the Docker container
 httpServer.listen({
   port: port,
-  host: '127.0.0.1'
+  host: host,
 }, () => {
-  log(`Server running on port ${port}, bound to 127.0.0.1 (localhost only)`);
+  log(`Server running on ${host}:${port}`);
   
   // Get initial token
   getInitialToken();

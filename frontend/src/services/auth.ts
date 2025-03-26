@@ -11,7 +11,7 @@ const INITIAL_TOKEN_KEY = 'ai_file_board_initial_token';
 // Axios instance for auth requests
 const authApi = axios.create({
   baseURL: API_CONFIG.BASE_URL,
-  withCredentials: true  // Important for cookies
+  withCredentials: true, // Important for cookies
 });
 
 // Types
@@ -76,7 +76,7 @@ export const getAuthHeaders = (): Record<string, string> => {
   const token = getJwtToken();
   if (token) {
     return {
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     };
   }
   return {};
@@ -89,7 +89,7 @@ export const login = async (initialToken: string): Promise<boolean> => {
   try {
     console.log('Attempting to login with initial token');
     const response = await authApi.post<AuthResponse>('/auth/login', { token: initialToken });
-    
+
     if (response.data && response.data.token) {
       console.log('Login successful, JWT received');
       setJwtToken(response.data.token);
@@ -109,11 +109,15 @@ export const refreshToken = async (): Promise<boolean> => {
   try {
     const token = getJwtToken();
     if (!token) return false;
-    
-    const response = await authApi.post<AuthResponse>('/auth/refresh', {}, {
-      headers: getAuthHeaders()
-    });
-    
+
+    const response = await authApi.post<AuthResponse>(
+      '/auth/refresh',
+      {},
+      {
+        headers: getAuthHeaders(),
+      },
+    );
+
     if (response.data && response.data.token) {
       setJwtToken(response.data.token);
       return true;
@@ -132,30 +136,30 @@ export const verifyAuth = async (): Promise<boolean> => {
   try {
     // If we don't have a token, we're not authenticated
     if (!hasJwtToken()) return false;
-    
+
     // Check if the token is valid by making a request to the user endpoint
     const response = await authApi.get<UserResponse>('/auth/user', {
-      headers: getAuthHeaders()
+      headers: getAuthHeaders(),
     });
-    
+
     return response.data.isAuthenticated === true;
   } catch (error) {
     console.error('Auth verification failed:', error);
-    
+
     // If the token is invalid, try to refresh it once
     try {
       const refreshed = await refreshToken();
       if (refreshed) {
         // Try again with the new token
         const retryResponse = await authApi.get<UserResponse>('/auth/user', {
-          headers: getAuthHeaders()
+          headers: getAuthHeaders(),
         });
         return retryResponse.data.isAuthenticated === true;
       }
     } catch (refreshError) {
       console.error('Token refresh during verification failed:', refreshError);
     }
-    
+
     return false;
   }
 };
@@ -166,13 +170,17 @@ export const verifyAuth = async (): Promise<boolean> => {
 export const logout = async (): Promise<void> => {
   try {
     if (hasJwtToken()) {
-      await authApi.post('/auth/logout', {}, {
-        headers: getAuthHeaders()
-      });
+      await authApi.post(
+        '/auth/logout',
+        {},
+        {
+          headers: getAuthHeaders(),
+        },
+      );
     }
   } catch (error) {
     console.error('Logout API call failed:', error);
   } finally {
     clearAllTokens();
   }
-}; 
+};

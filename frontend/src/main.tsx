@@ -37,5 +37,5 @@ root.render(
   <StrictMode>
     <StoreInitializer />
     <App />
-  </StrictMode>
+  </StrictMode>,
 );
