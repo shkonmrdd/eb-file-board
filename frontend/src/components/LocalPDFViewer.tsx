@@ -16,17 +16,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ url, width = '100%', height = '10
     pageCanvases: [],
   });
 
-  // Load the PDF document
   useEffect(() => {
     if (!url) return;
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
-    // Add authentication headers
     const authHeaders = getAuthHeaders();
     const loadingTask = pdfjsLib.getDocument({
       url: url,
-      httpHeaders: authHeaders
+      httpHeaders: authHeaders,
     });
 
     loadingTask.promise
@@ -35,7 +33,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ url, width = '100%', height = '10
       })
       .catch((err) => {
         console.error('Error loading PDF:', err);
-        setState((prev) => ({ ...prev, loading: false, error: 'Failed to load PDF: ' + err.message }));
       });
 
     return () => {
