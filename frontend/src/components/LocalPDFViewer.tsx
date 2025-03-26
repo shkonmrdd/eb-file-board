@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFViewerProps, PDFDocumentState, PDFRenderContext } from '../types/pdf';
+import { getAuthHeaders } from '../services/auth';
 
 const pdfWorkerSrc = new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url).toString();
 
@@ -21,7 +22,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ url, width = '100%', height = '10
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
-    const loadingTask = pdfjsLib.getDocument(url);
+    // Add authentication headers
+    const authHeaders = getAuthHeaders();
+    const loadingTask = pdfjsLib.getDocument({
+      url: url,
+      httpHeaders: authHeaders
+    });
 
     loadingTask.promise
       .then((doc) => {
@@ -29,7 +35,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ url, width = '100%', height = '10
       })
       .catch((err) => {
         console.error('Error loading PDF:', err);
-        setState((prev) => ({ ...prev, loading: false }));
+        setState((prev) => ({ ...prev, loading: false, error: 'Failed to load PDF: ' + err.message }));
       });
 
     return () => {
