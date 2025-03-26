@@ -42,38 +42,6 @@ export class AuthController {
   }
   
   /**
-   * Refresh token endpoint - generates a new token if the current one is valid
-   */
-  static refreshToken(req: Request, res: Response): void {
-    try {
-      // The user info is attached by the authenticateJWT middleware
-      if (!req.user) {
-        log('Token refresh failed: No user in request');
-        res.status(401).json({ message: 'Authentication required' });
-        return;
-      }
-      
-      // Generate a new token for the authenticated user
-      const newToken = generateToken(req.user.userId);
-      
-      // Set token in cookie and return in response
-      res.cookie('token', newToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-      });
-      
-      res.json({
-        message: 'Token refreshed successfully',
-        token: newToken
-      });
-    } catch (error) {
-      log(`Token refresh error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      res.status(500).json({ message: 'Token refresh failed' });
-    }
-  }
-  
-  /**
    * Get current user info
    */
   static getCurrentUser(req: Request, res: Response): void {

@@ -11,8 +11,8 @@ import {
   verifyAuth,
   login,
   logout,
-  getInitialToken,
-  setInitialToken,
+  getJwtToken,
+  setJwtToken,
 } from './services/auth';
 import { connectSocket } from './socket';
 import LoginForm from './components/LoginForm';
@@ -39,10 +39,10 @@ function App() {
           }
         }
 
-        const initialToken = getInitialToken();
-        if (initialToken) {
+        const token = getJwtToken();
+        if (token) {
           console.log('Found initial token, attempting login');
-          const loginSuccess = await login(initialToken);
+          const loginSuccess = await login(token);
           setIsAuthenticated(loginSuccess);
           if (loginSuccess) {
             connectSocket(); // Connect WebSocket after successful login
@@ -72,7 +72,7 @@ function App() {
   const handleLogin = async (token: string) => {
     setIsLoginAttempting(true);
     try {
-      setInitialToken(token);
+      setJwtToken(token);
       const loginSuccess = await login(token);
       setIsAuthenticated(loginSuccess);
       if (loginSuccess) {
