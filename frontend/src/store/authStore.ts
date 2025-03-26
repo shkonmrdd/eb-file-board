@@ -12,14 +12,14 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   isLoginAttempting: boolean;
-  
+
   // Actions
   initialize: () => Promise<void>;
   login: (token: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>((set, get) => ({
+export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: hasJwtToken(),
   isLoading: true,
   isLoginAttempting: false,
@@ -29,7 +29,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (hasJwtToken()) {
         console.log('Found JWT token, verifying...');
         const isValid = await verifyAuth();
-        
+
         if (isValid) {
           console.log('JWT is valid');
           set({ isAuthenticated: true });
@@ -53,9 +53,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       setJwtToken(token);
       const loginSuccess = await apiLogin(token);
-      
+
       set({ isAuthenticated: loginSuccess });
-      
+
       if (loginSuccess) {
         connectSocket(); // Connect WebSocket after successful login
         return true;
