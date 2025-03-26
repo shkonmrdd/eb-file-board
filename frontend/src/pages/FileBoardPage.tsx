@@ -5,7 +5,6 @@ import { useBoardState } from '../hooks/useBoardState';
 import { useState, useEffect } from 'react';
 import { LogOut } from 'lucide-react';
 import { ExcalidrawEmbeddableElement, NonDeleted } from '@excalidraw/excalidraw/element/types';
-import { AppState } from '@excalidraw/excalidraw/types';
 
 // Add onLogout prop to the Board component
 interface BoardProps {
@@ -91,7 +90,7 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
               if (element.link === null) {
                 return null;
               }
-              
+
               return (
                 <iframe
                   src={element.link}
