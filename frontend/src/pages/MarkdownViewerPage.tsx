@@ -56,9 +56,9 @@ const MarkdownViewerPage: React.FC = () => {
 
         // If not in store, fetch from server with authentication headers
         const response = await axios.get(url, {
-          headers: getAuthHeaders()
+          headers: getAuthHeaders(),
         });
-        
+
         const text = response.data;
         setValue(text);
         lastSavedContentRef.current = text;

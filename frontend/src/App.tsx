@@ -10,14 +10,8 @@ import { useAuthStore } from './store';
 import LoginForm from './components/LoginForm';
 
 function App() {
-  const { 
-    isAuthenticated, 
-    isLoading, 
-    isLoginAttempting, 
-    initialize, 
-    login, 
-    logout 
-  } = useAuthStore();
+  const { isAuthenticated, isLoading, isLoginAttempting, initialize, login, logout } =
+    useAuthStore();
 
   useEffect(() => {
     initialize();

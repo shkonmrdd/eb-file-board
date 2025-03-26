@@ -87,12 +87,11 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
               files: initialState?.files,
             }}
             validateEmbeddable={() => true}
-            renderEmbeddable={((element: NonDeleted<ExcalidrawEmbeddableElement>, appState: AppState) => {
+            renderEmbeddable={(element: NonDeleted<ExcalidrawEmbeddableElement>) => {
               if (element.link === null) {
                 return null;
               }
-
-              console.log(element)
+              
               return (
                 <iframe
                   src={element.link}
@@ -104,7 +103,7 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
                   }}
                 />
               );
-            })}
+            }}
             onChange={(elements, appState) => {
               debouncedUpdateState(elements, appState);
             }}
