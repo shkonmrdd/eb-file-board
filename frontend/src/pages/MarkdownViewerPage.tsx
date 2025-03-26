@@ -4,6 +4,8 @@ import MDEditor from '@uiw/react-md-editor';
 import { socket } from '../socket';
 import { debounce } from 'lodash';
 import { useFileStore } from '../store/fileStore';
+import { getAuthHeaders } from '../services/auth';
+import axios from 'axios';
 
 const getUrlParameter = (name: string): string | null => {
   const urlParams = new URLSearchParams(location.search);
@@ -52,13 +54,12 @@ const MarkdownViewerPage: React.FC = () => {
           return;
         }
 
-        // If not in store, fetch from server
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error('File not found');
-        }
-
-        const text = await response.text();
+        // If not in store, fetch from server with authentication headers
+        const response = await axios.get(url, {
+          headers: getAuthHeaders()
+        });
+        
+        const text = response.data;
         setValue(text);
         lastSavedContentRef.current = text;
 

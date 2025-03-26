@@ -4,6 +4,8 @@ import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import { useBoardState } from '../hooks/useBoardState';
 import { useState, useEffect } from 'react';
 import { LogOut } from 'lucide-react';
+import { ExcalidrawEmbeddableElement, NonDeleted } from '@excalidraw/excalidraw/element/types';
+import { AppState } from '@excalidraw/excalidraw/types';
 
 // Add onLogout prop to the Board component
 interface BoardProps {
@@ -85,6 +87,24 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
               files: initialState?.files,
             }}
             validateEmbeddable={() => true}
+            renderEmbeddable={((element: NonDeleted<ExcalidrawEmbeddableElement>, appState: AppState) => {
+              if (element.link === null) {
+                return null;
+              }
+
+              console.log(element)
+              return (
+                <iframe
+                  src={element.link}
+                  title={element.link}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                  }}
+                />
+              );
+            })}
             onChange={(elements, appState) => {
               debouncedUpdateState(elements, appState);
             }}
