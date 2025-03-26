@@ -25,10 +25,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 
 # Copy frontend source code
-COPY frontend/tsconfig.json frontend/tsconfig.app.json frontend/tsconfig.node.json ./
-COPY frontend/vite.config.ts frontend/index.html ./
-COPY frontend/src ./src
-COPY frontend/public ./public
+COPY frontend/ ./
 
 # Build the frontend application
 RUN npm run build

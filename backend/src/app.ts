@@ -8,15 +8,13 @@ import path from "path";
 import fs from "fs";
 import { authenticateJWT } from "./middleware/jwt.middleware";
 import authRoutes from "./routes/auth.routes";
+import { getCorsOrigins } from "./utils";
 
 const app = express();
 
 // Determine appropriate CORS origin based on environment
-const corsOrigins = process.env.CORS_ORIGIN ? 
-  process.env.CORS_ORIGIN.split(',') : 
-  (process.env.NODE_ENV === 'production' ? 
-    ['http://localhost:3001'] : 
-    ['http://localhost:5173', 'http://localhost:3001']);
+const corsOrigins = getCorsOrigins();
+console.log(`HTTP CORS configured with allowed origins: ${corsOrigins.join(', ')}`);
 
 // 1. Configure CORS first - this must come before authentication to allow preflight requests
 app.use(cors({
@@ -26,9 +24,6 @@ app.use(cors({
   optionsSuccessStatus: 204,
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-// Debug log for CORS configuration
-log(`CORS configured with allowed origins: ${corsOrigins.join(', ')}`);
 
 // 2. Parse cookies and JSON body
 app.use(cookieParser());
