@@ -1,6 +1,7 @@
 import { ExcalidrawElement } from '@excalidraw/excalidraw/element/types';
 import { ExcalidrawImperativeAPI } from '@excalidraw/excalidraw/types';
 import { FileType, Position } from '../types';
+import { API_CONFIG } from '../constants/config';
 
 interface ElementConfig {
   x: number;
@@ -31,28 +32,48 @@ export const useExcalidrawElements = () => {
     groupIds: [],
   });
 
+  const toRelativeFileParam = (absoluteUrl: string): string => {
+    try {
+      const { pathname } = new URL(absoluteUrl);
+
+      // Trim leading slash and uploads route prefix if present
+      let relative = pathname.startsWith('/') ? pathname.slice(1) : pathname;
+
+      const uploadsPrefix = API_CONFIG.UPLOADS_ROUTE.replace(/^\//, '') + '/'; // e.g., 'files/'
+      if (relative.startsWith(uploadsPrefix)) {
+        relative = relative.slice(uploadsPrefix.length);
+      }
+
+      return relative; // e.g., 'boardName/filename.ext'
+    } catch {
+      return absoluteUrl;
+    }
+  };
+
   const createFileElement = (
     type: FileType,
     link: string,
     position: Position,
   ): ExcalidrawElement[] => {
-    const config: Record<FileType, (link: string) => ElementConfig> = {
-      txt: (link) => ({
+    const relativePath = toRelativeFileParam(link);
+
+    const config: Record<FileType, (fileParam: string) => ElementConfig> = {
+      txt: (fileParam) => ({
         ...position,
-        link: `/md/?url=${link}&preview=edit`,
+        link: `/md/?file=${fileParam}&preview=edit`,
       }),
-      md: (link) => ({
+      md: (fileParam) => ({
         ...position,
         width: 1600,
-        link: `/md/?url=${link}&preview=live`,
+        link: `/md/?file=${fileParam}&preview=live`,
       }),
-      pdf: (link) => ({
+      pdf: (fileParam) => ({
         ...position,
-        link: `/pdf/?url=${link}`,
+        link: `/pdf/?file=${fileParam}`,
       }),
     };
 
-    const elementConfig = config[type]?.(link);
+    const elementConfig = config[type]?.(relativePath);
     if (!elementConfig) {
       throw new Error(`Unsupported file type: ${type}`);
     }

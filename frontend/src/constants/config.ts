@@ -5,6 +5,7 @@ export const API_CONFIG = {
     BOARD: '/files/:boardName/board.json',
     API: '/api',
   },
+  UPLOADS_ROUTE: '/files',
 } as const;
 
 export const FILE_TYPES = {

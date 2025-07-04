@@ -6,10 +6,21 @@ import { debounce } from 'lodash';
 import { useFileStore } from '../store/fileStore';
 import { getAuthHeaders } from '../services/auth';
 import axios from 'axios';
+import { API_CONFIG } from '../constants/config';
+
+const buildAbsoluteUrl = (fileParam: string | null): string | null => {
+  if (!fileParam) return null;
+  const trimmed = fileParam.startsWith('/') ? fileParam.slice(1) : fileParam;
+  const uploadsPrefix = API_CONFIG.UPLOADS_ROUTE.replace(/^\//, '');
+  const pathWithUploads = trimmed.startsWith(uploadsPrefix) ? trimmed : `${uploadsPrefix}/${trimmed}`;
+
+  const prefix = API_CONFIG.BASE_URL.endsWith('/') ? API_CONFIG.BASE_URL.slice(0, -1) : API_CONFIG.BASE_URL;
+  return `${prefix}/${pathWithUploads}`;
+};
 
 const getUrlParameter = (name: string): string | null => {
   const urlParams = new URLSearchParams(location.search);
-  return urlParams.get(name) ?? '';
+  return urlParams.get(name) ?? null;
 };
 
 const MarkdownViewerPage: React.FC = () => {
@@ -72,7 +83,11 @@ const MarkdownViewerPage: React.FC = () => {
       }
     };
 
-    const url = getUrlParameter('url');
+    const urlParam = getUrlParameter('url');
+    const fileParam = getUrlParameter('file');
+
+    const url = urlParam || buildAbsoluteUrl(fileParam);
+
     if (url) fetchData(url);
 
     return () => {
