@@ -2,9 +2,11 @@ import { useParams } from 'react-router';
 import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import { useBoardState } from '../hooks/useBoardState';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { LogOut } from 'lucide-react';
 import { ExcalidrawEmbeddableElement, NonDeleted } from '@excalidraw/excalidraw/element/types';
+import EmbeddedMarkdownViewer from '../components/EmbeddedMarkdownViewer';
+import EmbeddedPDFViewer from '../components/EmbeddedPDFViewer';
 
 // Add onLogout prop to the Board component
 interface BoardProps {
@@ -37,6 +39,8 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
     excalidrawAPI,
     boardName,
   });
+
+  const embeddableCacheRef = useRef<Map<string, React.ReactElement>>(new Map());
 
   useEffect(() => {
     if (initialState !== null) {
@@ -91,17 +95,28 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
                 return null;
               }
 
-              return (
-                <iframe
-                  src={element.link}
-                  title={element.link}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    border: 'none',
-                  }}
-                />
-              );
+              const cached = embeddableCacheRef.current.get(element.id);
+              if (cached) {
+                return cached;
+              }
+
+              let viewer: React.ReactElement;
+              if (element.link.startsWith('/md/')) {
+                viewer = <EmbeddedMarkdownViewer link={element.link} />;
+              } else if (element.link.startsWith('/pdf/')) {
+                viewer = <EmbeddedPDFViewer link={element.link} />;
+              } else {
+                viewer = (
+                  <iframe
+                    src={element.link}
+                    title={element.link}
+                    style={{ width: '100%', height: '100%', border: 'none' }}
+                  />
+                );
+              }
+
+              embeddableCacheRef.current.set(element.id, viewer);
+              return viewer;
             }}
             onChange={(elements, appState) => {
               debouncedUpdateState(elements, appState);
