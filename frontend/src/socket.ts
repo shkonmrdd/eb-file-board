@@ -2,7 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import { BoardUpdatePayload, FileUpdatePayload } from './types';
 import { getJwtToken } from './services/auth';
 
-const SOCKET_URL = import.meta.env.PROD ? '/' : 'http://localhost:3001';
+const SOCKET_URL = import.meta.env.PROD ? '/' : 'http://localhost:3075';
 
 interface ServerToClientEvents {
   'board-update': (data: BoardUpdatePayload) => void;
