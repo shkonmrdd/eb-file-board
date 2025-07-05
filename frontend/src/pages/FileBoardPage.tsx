@@ -122,7 +122,7 @@ const Sidebar = ({ currentBoard, onLogout }: { currentBoard: string; onLogout?: 
 const TopBar = ({ currentBoard }: { currentBoard: string }) => {
   return (
     <div className="h-8 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-center px-4">
-      <span className="text-xs font-medium text-gray-600 dark:text-gray-400 tracking-wide uppercase">
+      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
         {currentBoard}
       </span>
     </div>
