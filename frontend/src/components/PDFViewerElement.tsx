@@ -28,7 +28,7 @@ const PDFViewerElement: React.FC<PDFViewerElementProps> = ({ url, width = '100%'
   const [state, setState] = useState<PDFDocumentState>({
     loading: true,
     error: null,
-    scale: 1.5, // Smaller scale for embedded view
+    scale: 1.75, // Smaller scale for embedded view
     pdfDoc: null,
     pageCanvases: [],
   });
