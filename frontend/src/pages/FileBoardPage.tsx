@@ -1,10 +1,11 @@
 import { useParams } from 'react-router';
-import { Excalidraw, MainMenu } from '@excalidraw/excalidraw';
+import { Excalidraw, MainMenu, Footer } from '@excalidraw/excalidraw';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import { useBoardState } from '../hooks/useBoardState';
 import { useState, useEffect } from 'react';
 import { LogOut } from 'lucide-react';
 import { ExcalidrawEmbeddableElement, NonDeleted } from '@excalidraw/excalidraw/element/types';
+import FileCreationButtons from '../components/FileCreationButtons';
 
 // Add onLogout prop to the Board component
 interface BoardProps {
@@ -38,9 +39,17 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
     boardName,
   });
 
+  const [theme, setTheme] = useState<'light' | 'dark'>(
+    initialState?.appState?.theme ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+  );
+
   useEffect(() => {
     if (initialState !== null) {
       setIsLoading(false);
+      if (initialState.appState?.theme) {
+        setTheme(initialState.appState.theme as 'light' | 'dark');
+      }
     }
   }, [initialState]);
 
@@ -79,9 +88,7 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
                 currentItemFontFamily: 2,
                 currentItemRoughness: 0,
                 zenModeEnabled: false,
-                theme:
-                  initialState?.appState?.theme ||
-                  (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'),
+                theme: theme,
               },
               files: initialState?.files,
             }}
@@ -105,6 +112,9 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
             }}
             onChange={(elements, appState) => {
               debouncedUpdateState(elements, appState);
+              if ((appState as any)?.theme && (appState as any).theme !== theme) {
+                setTheme((appState as any).theme as 'light' | 'dark');
+              }
             }}
           >
             <MainMenu>
@@ -126,6 +136,15 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
                 </MainMenu.Item>
               )}
             </MainMenu>
+
+            <Footer>
+              <FileCreationButtons
+                excalidrawAPI={excalidrawAPI}
+                boardName={boardName}
+                cursorPositionRef={cursorPositionRef}
+                theme={theme}
+              />
+            </Footer>
           </Excalidraw>
         )}
       </div>
