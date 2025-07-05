@@ -132,6 +132,10 @@ const MarkdownViewerElement: React.FC<MarkdownViewerElementProps> = ({
     [handleValueChange],
   );
 
+  const stopPropagation = useCallback((e: React.SyntheticEvent) => {
+    e.stopPropagation();
+  }, []);
+
   if (isLoading) {
     return (
       <div 
@@ -176,14 +180,17 @@ const MarkdownViewerElement: React.FC<MarkdownViewerElementProps> = ({
 
   return (
     <div 
+      onWheelCapture={stopPropagation}
+      onPointerDownCapture={stopPropagation}
       style={{ 
         width, 
         height, 
-        overflow: 'auto',
         border: '1px solid #ddd',
         borderRadius: '4px',
-        isolation: 'isolate' // Prevent Tailwind interference
-      }}
+        isolation: 'isolate', // Prevent Tailwind interference
+        // Reset problematic CSS variables from Excalidraw
+        '--input-bg-color': 'initial',
+      } as React.CSSProperties}
     >
       <MDEditor
         value={value}
