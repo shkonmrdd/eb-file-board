@@ -67,3 +67,13 @@ export interface BoardStore {
   ) => void;
   setCurrentBoard: (boardName: string) => void;
 }
+
+// File tree types
+export interface FileTreeNode {
+  id: string;
+  name: string;
+  path: string;
+  type: 'file' | 'directory';
+  isBoard?: boolean;
+  children?: FileTreeNode[];
+}

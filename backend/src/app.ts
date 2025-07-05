@@ -72,6 +72,110 @@ app.get("/api/boards", (req, res) => {
   }
 });
 
+app.get("/api/files/:boardName", (req, res) => {
+  try {
+    const { boardName } = req.params;
+    // Sanitize board name to match backend convention (only alphanumeric + dash)
+    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+
+    const boardDir = path.join(config.uploadsPath, safeBoardName);
+
+    // If the board directory does not exist, return empty list
+    if (!fs.existsSync(boardDir)) {
+      res.json({ files: [] });
+      return;
+    }
+
+    // Helper to build the file tree recursively
+    const buildTree = (dirPath: string, relativePath: string): any[] => {
+      const dirEntries = fs.readdirSync(dirPath, { withFileTypes: true });
+
+      return dirEntries
+        // Ignore hidden files/folders and the board.json state file at root
+        .filter((entry) => {
+          if (entry.name.startsWith('.')) return false;
+          if (relativePath === safeBoardName && entry.name === 'board.json') return false;
+          return true;
+        })
+        .map((entry) => {
+          const entryRelative = path.join(relativePath, entry.name);
+          const entryFull = path.join(dirPath, entry.name);
+          if (entry.isDirectory()) {
+            return {
+              id: entryRelative, // unique id for tree component
+              name: entry.name,
+              path: `${config.uploadsRoute}/${entryRelative}`.replace(/\\/g, '/'),
+              type: 'directory',
+              children: buildTree(entryFull, entryRelative),
+            };
+          }
+          return {
+            id: entryRelative,
+            name: entry.name,
+            path: `${config.uploadsRoute}/${entryRelative}`.replace(/\\/g, '/'),
+            type: 'file',
+          };
+        });
+    };
+
+    const filesTree = buildTree(boardDir, safeBoardName);
+
+    res.json({ files: filesTree });
+  } catch (error) {
+    log(`Error fetching file tree: ${error}`);
+    res.status(500).json({ files: [] });
+  }
+});
+
+// Get complete file tree from root (all boards)
+app.get("/api/files", (req, res) => {
+  try {
+    if (!fs.existsSync(config.uploadsPath)) {
+      fs.mkdirSync(config.uploadsPath, { recursive: true });
+    }
+
+    // Helper to build the file tree recursively
+    const buildTree = (dirPath: string, relativePath: string = ''): any[] => {
+      const dirEntries = fs.readdirSync(dirPath, { withFileTypes: true });
+
+      return dirEntries
+        // Ignore hidden files/folders and board.json files
+        .filter((entry) => {
+          if (entry.name.startsWith('.')) return false;
+          if (entry.name === 'board.json') return false;
+          return true;
+        })
+        .map((entry) => {
+          const entryRelative = relativePath ? path.join(relativePath, entry.name) : entry.name;
+          const entryFull = path.join(dirPath, entry.name);
+          if (entry.isDirectory()) {
+            return {
+              id: entryRelative,
+              name: entry.name,
+              path: `${config.uploadsRoute}/${entryRelative}`.replace(/\\/g, '/'),
+              type: 'directory',
+              isBoard: relativePath === '', // Top-level directories are boards
+              children: buildTree(entryFull, entryRelative),
+            };
+          }
+          return {
+            id: entryRelative,
+            name: entry.name,
+            path: `${config.uploadsRoute}/${entryRelative}`.replace(/\\/g, '/'),
+            type: 'file',
+          };
+        });
+    };
+
+    const filesTree = buildTree(config.uploadsPath);
+
+    res.json({ files: filesTree });
+  } catch (error) {
+    log(`Error fetching complete file tree: ${error}`);
+    res.status(500).json({ files: [] });
+  }
+});
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.post("/upload", upload.single("file"), (req, res): void => {

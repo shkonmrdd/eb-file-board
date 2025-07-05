@@ -3,10 +3,11 @@ import { Excalidraw, MainMenu, Footer } from '@excalidraw/excalidraw';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import { useBoardState } from '../hooks/useBoardState';
 import { useState, useEffect } from 'react';
-import { LogOut, FileText, Users, RefreshCw } from 'lucide-react';
+import { LogOut, FileText, RefreshCw } from 'lucide-react';
 import { ExcalidrawEmbeddableElement, NonDeleted } from '@excalidraw/excalidraw/element/types';
 import FileCreationButtons from '../components/FileCreationButtons';
-import { useBoardStore } from '../store/boardStore';
+import FileTree from '../components/FileTree';
+import { useFileTreeStore } from '../store/fileTreeStore';
 
 // Add onLogout prop to the Board component
 interface BoardProps {
@@ -30,19 +31,15 @@ const LoadingScreen = () => (
 
 // Sidebar component
 const Sidebar = ({ currentBoard, onLogout }: { currentBoard: string; onLogout?: () => void }) => {
-  const { boardsList, isLoadingBoardsList, fetchBoardsList } = useBoardStore();
+  const { fileTree, isLoadingFileTree, fetchFileTree } = useFileTreeStore();
   const navigate = useNavigate();
   
-  // Fetch boards list when component mounts
+  // Fetch file tree when component mounts
   useEffect(() => {
-    fetchBoardsList();
-  }, [fetchBoardsList]);
+    fetchFileTree();
+  }, [fetchFileTree]);
   
-  // Get list of boards - always include 'main' and add fetched boards
-  const availableBoards = ['main', ...boardsList.filter(board => board !== 'main')];
-  const uniqueBoards = Array.from(new Set(availableBoards));
-  
-  const handleBoardClick = (boardName: string) => {
+  const handleBoardSelect = (boardName: string) => {
     if (boardName === 'main') {
       navigate('/');
     } else {
@@ -57,47 +54,33 @@ const Sidebar = ({ currentBoard, onLogout }: { currentBoard: string; onLogout?: 
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
             <FileText className="w-5 h-5" />
-            Boards
+            Files
           </h2>
           <button
-            onClick={fetchBoardsList}
-            disabled={isLoadingBoardsList}
+            onClick={fetchFileTree}
+            disabled={isLoadingFileTree}
             className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
-            title="Refresh boards list"
+            title="Refresh file tree"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoadingBoardsList ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoadingFileTree ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
       
-      {/* Boards List */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-2">
-          {isLoadingBoardsList ? (
-            <div className="text-center py-4">
-              <div className="text-sm text-gray-500 dark:text-gray-400">Loading boards...</div>
-            </div>
-          ) : uniqueBoards.length === 0 ? (
-            <div className="text-center py-4">
-              <div className="text-sm text-gray-500 dark:text-gray-400">No boards found</div>
+      {/* File Tree */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 p-2 min-h-0">
+          {isLoadingFileTree ? (
+            <div className="text-center py-4 text-sm text-gray-500 dark:text-gray-400">
+              Loading file tree...
             </div>
           ) : (
-            uniqueBoards.map((boardName) => (
-              <button
-                key={boardName}
-                onClick={() => handleBoardClick(boardName)}
-                className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  currentBoard === boardName
-                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                    : 'text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4" />
-                  {boardName}
-                </div>
-              </button>
-            ))
+            <FileTree 
+              data={fileTree} 
+              height="100%" 
+              currentBoard={currentBoard}
+              onBoardSelect={handleBoardSelect}
+            />
           )}
         </div>
       </div>

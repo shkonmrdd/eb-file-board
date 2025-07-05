@@ -1,5 +1,5 @@
 import { API_CONFIG } from '../constants/config';
-import type { FileUploadResponse, BoardState } from '../types';
+import type { FileUploadResponse, BoardState, FileTreeNode } from '../types';
 import { getJwtToken } from './auth';
 import { connectSocket } from '../socket';
 import axios from 'axios';
@@ -74,5 +74,28 @@ export const getBoardsList = async (): Promise<string[]> => {
   } catch (error) {
     console.error('Error fetching boards list:', error);
     throw error;
+  }
+};
+
+// Fetch recursive file tree for a board
+export const getFileTree = async (boardName: string): Promise<FileTreeNode[]> => {
+  try {
+    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    const response = await api.get(`/api/files/${safeBoardName}`);
+    return response.data.files || [];
+  } catch (error) {
+    console.error('Error fetching file tree:', error);
+    return [];
+  }
+};
+
+// Fetch complete file tree from root (all boards)
+export const getCompleteFileTree = async (): Promise<FileTreeNode[]> => {
+  try {
+    const response = await api.get('/api/files');
+    return response.data.files || [];
+  } catch (error) {
+    console.error('Error fetching complete file tree:', error);
+    return [];
   }
 };
