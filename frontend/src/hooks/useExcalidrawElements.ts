@@ -60,16 +60,16 @@ export const useExcalidrawElements = () => {
     const config: Record<FileType, (fileParam: string) => ElementConfig> = {
       txt: (fileParam) => ({
         ...position,
-        link: `/md/?file=${fileParam}&preview=edit`,
+        link: `/files/${fileParam}?preview=edit`,
       }),
       md: (fileParam) => ({
         ...position,
         width: 1600,
-        link: `/md/?file=${fileParam}&preview=live`,
+        link: `/files/${fileParam}?preview=live`,
       }),
       pdf: (fileParam) => ({
         ...position,
-        link: `/pdf/?file=${fileParam}`,
+        link: `/files/${fileParam}`,
       }),
     };
 

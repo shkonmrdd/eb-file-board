@@ -1,3 +1,11 @@
+export { default as FileCreationButtons } from './FileCreationButtons';
+export { default as FileTree } from './FileTree';
+export { default as Header } from './Header';
+export { default as HeaderElement } from './HeaderElement';
 export { default as LoadingScreen } from './LoadingScreen';
+export { default as LocalPDFViewer } from './LocalPDFViewer';
+export { default as LoginForm } from './LoginForm';
+export { default as MarkdownViewerElement } from './MarkdownViewerElement';
+export { default as PDFViewerElement } from './PDFViewerElement';
 export { default as Sidebar } from './Sidebar';
 export { default as TopBar } from './TopBar'; 

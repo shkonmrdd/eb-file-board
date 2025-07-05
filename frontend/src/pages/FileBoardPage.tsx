@@ -2,15 +2,97 @@ import { useParams } from 'react-router';
 import { Excalidraw, MainMenu, Footer } from '@excalidraw/excalidraw';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import { useBoardState } from '../hooks/useBoardState';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { ExcalidrawEmbeddableElement, NonDeleted } from '@excalidraw/excalidraw/element/types';
 import FileCreationButtons from '../components/FileCreationButtons';
 import LoadingScreen from '../components/LoadingScreen';
 import BoardWrapper from '../layouts/BoardWrapper';
+import { PDFViewerElement, MarkdownViewerElement, HeaderElement } from '../components';
+import { API_CONFIG } from '../constants/config';
 
 interface BoardProps {
   onLogout?: () => void;
 }
+
+const EmbeddableRenderer: React.FC<{ link: string }> = memo(({ link }) => {
+  const getFileType = (url: string): string => {
+    try {
+      const fullUrl = url.startsWith('http') ? url : `${API_CONFIG.BASE_URL}${url}`;
+      const urlObj = new URL(fullUrl);
+      const pathname = urlObj.pathname.toLowerCase();
+
+      if (pathname.endsWith('.pdf')) return 'pdf';
+      if (pathname.endsWith('.md') || pathname.endsWith('.markdown')) return 'markdown';
+      if (pathname.endsWith('.txt')) return 'txt';
+
+      // Fallback for legacy formats
+      if (url.includes('/pdf/')) return 'pdf';
+      if (url.includes('/md/')) return 'markdown';
+      if (url.includes('/txt/')) return 'txt';
+
+      const fileParam = urlObj.searchParams.get('file');
+      if (fileParam) {
+        const lower = fileParam.toLowerCase();
+        if (lower.endsWith('.pdf')) return 'pdf';
+        if (lower.endsWith('.md') || lower.endsWith('.markdown')) return 'markdown';
+        if (lower.endsWith('.txt')) return 'txt';
+      }
+
+      return 'unknown';
+    } catch {
+      return 'unknown';
+    }
+  };
+
+  const fileType = getFileType(link);
+
+  const getPreviewMode = (url: string): 'edit' | 'live' | 'preview' => {
+    try {
+      const urlObj = new URL(url.startsWith('http') ? url : `${API_CONFIG.BASE_URL}${url}`);
+      const preview = urlObj.searchParams.get('preview');
+      if (preview === 'edit' || preview === 'live') return preview;
+      return 'preview';
+    } catch {
+      return 'preview';
+    }
+  };
+
+  const commonProps = {
+    width: '100%',
+    height: '100%',
+  } as const;
+
+  const renderWithHeader = (body: React.ReactElement) => (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <div style={{ flex: '0 0 auto' }}>
+        <HeaderElement url={link} width="100%" height={40} />
+      </div>
+      <div style={{ flex: '1 1 0%', overflow: 'hidden' }}>{body}</div>
+    </div>
+  );
+
+  switch (fileType) {
+    case 'pdf':
+      return renderWithHeader(<PDFViewerElement url={link} {...commonProps} />);
+    case 'markdown':
+      return renderWithHeader(
+        <MarkdownViewerElement url={link} preview={getPreviewMode(link)} {...commonProps} />,
+      );
+    case 'txt':
+      return renderWithHeader(<MarkdownViewerElement url={link} preview="edit" {...commonProps} />);
+    default:
+      return <HeaderElement url={link} {...commonProps} />;
+  }
+});
+
+EmbeddableRenderer.displayName = 'EmbeddableRenderer';
 
 const Board: React.FC<BoardProps> = ({ onLogout }) => {
   const params = useParams();
@@ -89,17 +171,7 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
                 return null;
               }
 
-              return (
-                <iframe
-                  src={element.link}
-                  title={element.link}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    border: 'none',
-                  }}
-                />
-              );
+              return <EmbeddableRenderer link={element.link} />;
             }}
             onChange={(elements, appState) => {
               debouncedUpdateState(elements, appState);
