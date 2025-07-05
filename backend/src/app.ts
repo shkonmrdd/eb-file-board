@@ -49,6 +49,29 @@ app.get("/api", (req, res) => {
   res.send("AI File board API is up and running!");
 });
 
+app.get("/api/boards", (req, res) => {
+  try {
+    if (!fs.existsSync(config.uploadsPath)) {
+      fs.mkdirSync(config.uploadsPath, { recursive: true });
+    }
+    
+    const boardDirs = fs.readdirSync(config.uploadsPath, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name);
+    
+    log(`Found ${boardDirs.length} boards: ${boardDirs.join(', ')}`);
+    
+    res.json({
+      boards: boardDirs
+    });
+  } catch (error) {
+    log(`Error fetching boards: ${error}`);
+    res.json({
+      boards: []
+    });
+  }
+});
+
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.post("/upload", upload.single("file"), (req, res): void => {
@@ -66,14 +89,13 @@ app.post("/upload", upload.single("file"), (req, res): void => {
     return;
   }
 
-  // Sanitize board name to prevent directory traversal
+
   const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
   
-  // Create board directory if it doesn't exist
   const boardPath = path.join(config.uploadsPath, safeBoardName);
   fs.mkdirSync(boardPath, { recursive: true });
   
-  // Save file from memory to disk
+
   const fileName = req.file.originalname;
   const filePath = path.join(boardPath, fileName);
   

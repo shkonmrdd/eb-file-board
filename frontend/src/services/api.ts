@@ -66,3 +66,13 @@ export const loadBoardState = async (boardName: string): Promise<BoardState | nu
     throw error;
   }
 };
+
+export const getBoardsList = async (): Promise<string[]> => {
+  try {
+    const response = await api.get('/api/boards');
+    return response.data.boards || [];
+  } catch (error) {
+    console.error('Error fetching boards list:', error);
+    throw error;
+  }
+};

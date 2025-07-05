@@ -38,7 +38,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="flex flex-col min-h-screen bg-gray-100 dark:bg-gray-900">
+      <div className="flex flex-col min-h-screen min-w-screen bg-gray-100 dark:bg-gray-900">
         <Routes>
           <Route path="/:boardName?" element={<Board onLogout={logout} />} />
           <Route element={<WithHeaderLayout />}>
