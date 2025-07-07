@@ -1,4 +1,4 @@
-import { useParams } from 'react-router';
+import { useParams, useNavigate } from 'react-router';
 import { Excalidraw, MainMenu, Footer } from '@excalidraw/excalidraw';
 import { useDragAndDrop } from '../hooks/useDragAndDrop';
 import { useBoardState } from '../hooks/useBoardState';
@@ -13,8 +13,9 @@ interface BoardProps {
   onLogout?: () => void;
 }
 
-const Board: React.FC<BoardProps> = ({ onLogout }) => {
+  const Board: React.FC<BoardProps> = ({ onLogout }) => {
   const params = useParams();
+  const navigate = useNavigate();
   const boardName = params.boardName ?? 'main';
   const [isLoading, setIsLoading] = useState(true);
 
@@ -24,6 +25,13 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
     excalidrawAPI,
     boardName,
   });
+
+  const handleNewBoard = () => {
+    const newBoardName = prompt('Enter new board name:');
+    if (newBoardName && newBoardName.trim()) {
+      navigate(`/${newBoardName.trim()}`);
+    }
+  };
 
   const [theme, setTheme] = useState<'light' | 'dark'>(
     initialState?.appState?.theme ||
@@ -45,7 +53,7 @@ const Board: React.FC<BoardProps> = ({ onLogout }) => {
   }, [initialState]);
 
   return (
-    <BoardWrapper currentBoard={boardName} onLogout={onLogout}>
+    <BoardWrapper currentBoard={boardName} onLogout={onLogout} onNewBoard={handleNewBoard}>
       <div
         id="app"
         style={{

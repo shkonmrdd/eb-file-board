@@ -1,15 +1,16 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { LogOut, FileText, RefreshCw } from 'lucide-react';
+import { LogOut, FileText, RefreshCw, Plus } from 'lucide-react';
 import FileTree from './FileTree';
 import { useFileTreeStore } from '../store/fileTreeStore';
 
 interface SidebarProps {
   currentBoard: string;
   onLogout?: () => void;
+  onNewBoard?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout }) => {
+const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout, onNewBoard }) => {
   const { fileTree, isLoadingFileTree, fetchFileTree } = useFileTreeStore();
   const navigate = useNavigate();
 
@@ -35,14 +36,25 @@ const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout }) => {
             <FileText className="w-5 h-5" />
             Files
           </h2>
-          <button
-            onClick={fetchFileTree}
-            disabled={isLoadingFileTree}
-            className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
-            title="Refresh file tree"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoadingFileTree ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="flex items-center gap-1">
+            {onNewBoard && (
+              <button
+                onClick={onNewBoard}
+                className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                title="New board"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            )}
+            <button
+              onClick={fetchFileTree}
+              disabled={isLoadingFileTree}
+              className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+              title="Refresh file tree"
+            >
+              <RefreshCw className={`w-4 h-4 ${isLoadingFileTree ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
       </div>
 
