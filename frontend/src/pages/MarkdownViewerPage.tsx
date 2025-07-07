@@ -1,12 +1,17 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams } from 'react-router';
-import MDEditor from '@uiw/react-md-editor';
+import MarkdownEditor from '@uiw/react-markdown-editor';
 import { socket } from '../socket';
 import { debounce } from 'lodash';
 import { useFileStore } from '../store/fileStore';
 import { getAuthHeaders } from '../services/auth';
 import axios from 'axios';
 import { API_CONFIG } from '../constants/config';
+import '@uiw/react-markdown-editor/markdown-editor.css';
+import '@uiw/react-markdown-preview/markdown.css';
+
+// Preserve original component name to avoid refactor of the rest of the file
+const MDEditor = MarkdownEditor;
 
 const buildAbsoluteUrl = (fileParam: string | null): string | null => {
   if (!fileParam) return null;
@@ -128,19 +133,48 @@ const MarkdownViewerPage: React.FC = () => {
     [handleValueChange],
   );
 
+  // container ref for stopping global key handlers, though Excalidraw not present, but safe
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const keyHandler = (ev: KeyboardEvent): void => {
+      if (containerRef.current && containerRef.current.contains(ev.target as Node)) {
+        ev.stopPropagation();
+      }
+    };
+    window.addEventListener('keydown', keyHandler, true);
+    window.addEventListener('keyup', keyHandler, true);
+    return () => {
+      window.removeEventListener('keydown', keyHandler, true);
+      window.removeEventListener('keyup', keyHandler, true);
+    };
+  }, []);
+
   return (
     <div
+      ref={containerRef}
       style={{
         width: '100vw',
         height: '100vh',
+        overflowY: 'auto',
       }}
     >
       <MDEditor
         value={value}
-        onChange={onEditorChange}
-        preview={previewMode}
+        onChange={(val: string) => onEditorChange(val)}
+        {...(() => {
+          switch (previewMode) {
+            case 'edit':
+              return { visible: false, visibleEditor: true };
+            case 'live':
+              return { visible: true, visibleEditor: true };
+            case 'preview':
+            default:
+              return { visible: true, visibleEditor: false };
+          }
+        })()}
         style={{
-          minHeight: 'calc(100vh - 65px)', // Yeah, I know
+          minHeight: 'calc(100vh - 65px)',
         }}
       />
     </div>

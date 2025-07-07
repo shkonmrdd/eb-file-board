@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import MDEditor from '@uiw/react-md-editor';
+import MarkdownEditor from '@uiw/react-markdown-editor';
+import '@uiw/react-markdown-editor/markdown-editor.css';
+import '@uiw/react-markdown-preview/markdown.css';
 import { socket } from '../socket';
 import { debounce } from 'lodash';
 import { useFileStore } from '../store/fileStore';
@@ -24,6 +26,8 @@ const buildAbsoluteUrl = (fileParam: string | null): string | null => {
   return `${prefix}/${pathWithUploads}`;
 };
 
+const MDEditor = MarkdownEditor;
+
 const MarkdownViewerElement: React.FC<MarkdownViewerElementProps> = ({ 
   url, 
   width = '100%', 
@@ -40,6 +44,9 @@ const MarkdownViewerElement: React.FC<MarkdownViewerElementProps> = ({
 
   // Use the file store
   const { updateFileContent, addFile, getFileContent } = useFileStore();
+
+  // Ref to the container for event checks
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Handle value changes and emit socket event
   const handleValueChange = useCallback(
@@ -136,6 +143,24 @@ const MarkdownViewerElement: React.FC<MarkdownViewerElementProps> = ({
     e.stopPropagation();
   }, []);
 
+  // Prevent Excalidraw (which registers global key handlers) from capturing
+  // keystrokes while the markdown editor is focused.
+  useEffect(() => {
+    const keyHandler = (ev: KeyboardEvent): void => {
+      if (containerRef.current && containerRef.current.contains(ev.target as Node)) {
+        ev.stopPropagation();
+      }
+    };
+
+    window.addEventListener('keydown', keyHandler, true);
+    window.addEventListener('keyup', keyHandler, true);
+
+    return () => {
+      window.removeEventListener('keydown', keyHandler, true);
+      window.removeEventListener('keyup', keyHandler, true);
+    };
+  }, []);
+
   if (isLoading) {
     return (
       <div 
@@ -180,6 +205,7 @@ const MarkdownViewerElement: React.FC<MarkdownViewerElementProps> = ({
 
   return (
     <div 
+      ref={containerRef}
       onWheelCapture={stopPropagation}
       onPointerDownCapture={stopPropagation}
       style={{ 
@@ -188,15 +214,26 @@ const MarkdownViewerElement: React.FC<MarkdownViewerElementProps> = ({
         border: '1px solid #ddd',
         borderRadius: '4px',
         isolation: 'isolate', // Prevent Tailwind interference
+        overflowY: 'auto',
         // Reset problematic CSS variables from Excalidraw
         '--input-bg-color': 'initial',
       } as React.CSSProperties}
     >
       <MDEditor
         value={value}
-        onChange={onEditorChange}
-        preview={preview}
-        height={typeof height === 'number' ? height : undefined}
+        onChange={(val: string) => onEditorChange(val)}
+        {...(() => {
+          switch (preview) {
+            case 'edit':
+              return { visible: false, visibleEditor: true };
+            case 'live':
+              return { visible: true, visibleEditor: true };
+            case 'preview':
+            default:
+              return { visible: true, visibleEditor: false };
+          }
+        })()}
+        height={typeof height === 'number' ? `${height}px` : typeof height === 'string' ? height : undefined}
         style={{
           minHeight: typeof height === 'number' ? `${height}px` : height,
           backgroundColor: 'white',
