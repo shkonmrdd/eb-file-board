@@ -40,7 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout, onNewBoard })
             {onNewBoard && (
               <button
                 onClick={onNewBoard}
-                className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
+                className="p-1 rounded-md bg-transparent border-none cursor-pointer text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
                 title="New board"
               >
                 <Plus className="w-4 h-4" />
@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout, onNewBoard })
             <button
               onClick={fetchFileTree}
               disabled={isLoadingFileTree}
-              className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50"
+              className="p-1 rounded-md bg-transparent border-none cursor-pointer text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               title="Refresh file tree"
             >
               <RefreshCw className={`w-4 h-4 ${isLoadingFileTree ? 'animate-spin' : ''}`} />
@@ -81,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout, onNewBoard })
         <div className="p-4 border-t border-gray-200 dark:border-[#38383f]">
           <button
             onClick={onLogout}
-            className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 rounded-md transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium bg-transparent border-none cursor-pointer text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
           >
             <LogOut className="w-4 h-4" />
             Logout
