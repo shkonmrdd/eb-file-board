@@ -18,6 +18,7 @@ interface BoardStore {
     files?: Record<string, FileData>,
   ) => void;
   syncBoard: (payload: BoardUpdatePayload) => void;
+  removeBoard: (boardName: string) => void;
   fetchBoardsList: () => Promise<void>;
 }
 
@@ -64,6 +65,13 @@ export const useBoardStore = create<BoardStore>((set) => ({
         [payload.boardName]: payload.board,
       },
     }));
+  },
+
+  removeBoard: (boardName) => {
+    set((state) => {
+      const { [boardName]: removedBoard, ...remainingBoards } = state.boards;
+      return { boards: remainingBoards };
+    });
   },
 
   fetchBoardsList: async () => {

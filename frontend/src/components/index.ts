@@ -9,4 +9,5 @@ export { default as MarkdownViewerElement } from './MarkdownViewerElement';
 export { default as PDFViewerElement } from './PDFViewerElement';
 export { default as Sidebar } from './Sidebar';
 export { default as TopBar } from './TopBar';
-export { default as EmbeddableRenderer } from './EmbeddableRenderer'; 
+export { default as EmbeddableRenderer } from './EmbeddableRenderer';
+export { default as ConfirmationModal } from './ConfirmationModal'; 

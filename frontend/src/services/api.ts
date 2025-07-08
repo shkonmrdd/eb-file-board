@@ -99,3 +99,28 @@ export const getCompleteFileTree = async (): Promise<FileTreeNode[]> => {
     return [];
   }
 };
+
+// Delete a board and all its contents
+export const deleteBoard = async (boardName: string): Promise<void> => {
+  try {
+    // Sanitize board name to match backend sanitization (though backend also sanitizes)
+    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    
+    console.log(`Deleting board: ${boardName} (sanitized to: ${safeBoardName})`);
+    
+    const response = await api.delete(`/api/boards/${safeBoardName}`);
+    
+    console.log('Board deleted successfully:', response.data);
+    
+    return response.data;
+  } catch (error: any) {
+    console.error('Error deleting board:', error);
+    
+    // Re-throw with more specific error message if available
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    
+    throw new Error('Failed to delete board');
+  }
+};
