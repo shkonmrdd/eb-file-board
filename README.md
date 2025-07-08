@@ -72,7 +72,7 @@ EB File Board is a **single-user visual workspace** built on top of [Excalidraw]
 ### 1. Clone the Repository
 ```bash
 git clone https://github.com/shkonmrdd/eb-file-board.git
-cd ai-file-board
+cd eb-file-board
 ```
 
 ### 2. Backend Setup
@@ -105,8 +105,8 @@ npm run dev
 ### Docker Setup (Alternative)
 ```bash
 # Build and run with Docker
-docker build -t ai-file-board .
-docker run -p 3001:3001 -v ./files:/data/files ai-file-board
+docker build -t eb-file-board .
+docker run -p 3001:3001 -v ./files:/data/files eb-file-board
 ```
 
 ## How to Use
@@ -149,7 +149,7 @@ The frontend automatically connects to the backend. For custom configurations, m
 ## Project Structure
 
 ```
-ai-file-board/
+eb-file-board/
 ├── backend/              # Node.js Express API
 │   ├── src/
 │   │   ├── controllers/  # Authentication logic
@@ -160,8 +160,8 @@ ai-file-board/
 │   └── files/            # File storage
 ├── frontend/             # React TypeScript app
 │   ├── src/
-│   │   ├── components/   # UI components
-│   │   ├── pages/        # Main pages
+│   │   ├── components/   # React components
+│   │   ├── pages/        # Pages
 │   │   ├── store/        # Zustand state management
 │   │   └── services/     # API services
 └── docs/                 # Documentation and assets
