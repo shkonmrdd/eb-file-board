@@ -27,7 +27,7 @@ const TreeNode: React.FC<TreeNodeProps> = ({ node, level, currentBoard, onBoardS
   const hasChildren = node.children && node.children.length > 0;
   const shouldShowExpanded = isExpanded && localExpanded;
   const isCurrentBoard = node.isBoard && currentBoard === node.name;
-  const canDeleteBoard = node.isBoard && isCurrentBoard && node.name !== 'main';
+  const canDeleteBoard = node.isBoard && node.name !== 'main';
 
   useEffect(() => {
     if (node.isBoard) {
