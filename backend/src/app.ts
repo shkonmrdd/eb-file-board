@@ -247,7 +247,8 @@ app.delete("/api/boards/:boardName", (req, res): void => {
     
     // Delete the board directory and all its contents recursively
     fs.rmSync(boardDir, { recursive: true, force: true });
-    
+
+     
     log(`Board '${safeBoardName}' deleted successfully by user ${req.user?.userId || 'unknown'}`);
     
     res.json({ 

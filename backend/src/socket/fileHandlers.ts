@@ -58,6 +58,7 @@ export const handleStateUpdate = async (
     const { board, boardName } = payload;
     // Sanitize board name to prevent directory traversal and ensure consistency with file uploads
     const safeBoardName = sanitizeBoardName(boardName);
+
     const boardPath = path.join(config.uploadsPath, safeBoardName, `board.json`);
 
     // Ensure the directory exists

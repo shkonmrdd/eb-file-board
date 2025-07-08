@@ -75,8 +75,9 @@ export const useBoardState = (boardName: string) => {
             filesJson: '{}',
           };
 
-          // Initialize this board in the store and save to backend
-          updateBoard(boardName, [], {} as AppState, {});
+          // Do NOT automatically create a board on first load. The board will be
+          // created only when the user makes changes (elements/appState/files)
+          // and debouncedUpdateState emits an update.
         }
       } catch (error) {
         console.error('Failed to load board state:', error);
@@ -158,6 +159,8 @@ export const useBoardState = (boardName: string) => {
 
     return () => {
       socket.off('board-update');
+      // Cancel any pending debounced updates for this board when unmounting or board changes
+      (debouncedUpdateState as any)?.cancel?.();
     };
   }, [boardName, excalidrawAPI]);
 
