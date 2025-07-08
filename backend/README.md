@@ -20,3 +20,14 @@ The `/data/files` directory in the container is configured as the file storage l
 ## Environment Variables
 
 - `PORT`: Server port (default: 3001)
+
+## Authentication & Security
+
+Environment variables:
+
+- `JWT_SECRET` – secret key (**required in production**, min 32 chars)
+- `BROWSER_TOKEN_EXPIRES_IN` – optional, JWT lifetime (default `365d`)
+
+At initial server startup an **INITIAL LOGIN TOKEN** is printed to the console. POST this token to `/auth/login` from each device to obtain a short-lived JWT cookie.
+
+When the JWT expires a subsequent API request will return HTTP 401. Simply log in again with the same initial token to get a fresh JWT.
