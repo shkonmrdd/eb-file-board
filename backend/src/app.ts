@@ -2,7 +2,7 @@ import express from "express";
 import multer from "multer";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import { log } from "./utils";
+import { log, sanitizeBoardName } from "./utils";
 import { config } from "./config";
 import path from "path";
 import fs from "fs";
@@ -88,7 +88,7 @@ app.get("/api/files/:boardName", (req, res) => {
   try {
     const { boardName } = req.params;
     // Sanitize board name to match backend convention (only alphanumeric + dash)
-    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    const safeBoardName = sanitizeBoardName(boardName);
 
     const boardDir = path.join(config.uploadsPath, safeBoardName);
 
@@ -201,7 +201,7 @@ app.delete("/api/boards/:boardName", (req, res): void => {
     }
     
     // Sanitize board name to prevent path traversal attacks
-    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    const safeBoardName = sanitizeBoardName(boardName);
     
     // Additional security: ensure board name doesn't contain path traversal attempts
     if (safeBoardName.includes('..') || safeBoardName.includes('/') || safeBoardName.includes('\\')) {
@@ -279,7 +279,7 @@ app.post("/upload", upload.single("file"), (req, res): void => {
   }
 
 
-  const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+  const safeBoardName = sanitizeBoardName(boardName);
   
   const boardPath = path.join(config.uploadsPath, safeBoardName);
   fs.mkdirSync(boardPath, { recursive: true });

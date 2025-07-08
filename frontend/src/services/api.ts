@@ -2,6 +2,7 @@ import { API_CONFIG } from '../constants/config';
 import type { FileUploadResponse, BoardState, FileTreeNode } from '../types';
 import { getJwtToken } from './auth';
 import { connectSocket } from '../socket';
+import { sanitizeBoardName } from '../utils/boardUtils';
 import axios from 'axios';
 
 // Create axios instance with auth
@@ -27,7 +28,7 @@ export const uploadFile = async (file: File, boardName: string): Promise<FileUpl
     // Note: The backend will sanitize this boardName, replacing non-alphanumeric chars with underscores
     // For better debugging, log the original and expected sanitized versions
     console.log(
-      `Uploading file to board: ${boardName} (will be sanitized to: ${boardName.replace(/[^a-z0-9\-]/gi, '_')})`,
+      `Uploading file to board: ${boardName} (will be sanitized to: ${sanitizeBoardName(boardName)})`,
     );
 
     const formData = new FormData();
@@ -53,7 +54,7 @@ export const uploadFile = async (file: File, boardName: string): Promise<FileUpl
 export const loadBoardState = async (boardName: string): Promise<BoardState | null> => {
   try {
     // Sanitize board name to match backend sanitization
-    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    const safeBoardName = sanitizeBoardName(boardName);
     const boardUrl = API_CONFIG.ENDPOINTS.BOARD.replace(':boardName', safeBoardName);
 
     const response = await api.get(boardUrl);
@@ -80,7 +81,7 @@ export const getBoardsList = async (): Promise<string[]> => {
 // Fetch recursive file tree for a board
 export const getFileTree = async (boardName: string): Promise<FileTreeNode[]> => {
   try {
-    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    const safeBoardName = sanitizeBoardName(boardName);
     const response = await api.get(`/api/files/${safeBoardName}`);
     return response.data.files || [];
   } catch (error) {
@@ -104,7 +105,7 @@ export const getCompleteFileTree = async (): Promise<FileTreeNode[]> => {
 export const deleteBoard = async (boardName: string): Promise<void> => {
   try {
     // Sanitize board name to match backend sanitization (though backend also sanitizes)
-    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    const safeBoardName = sanitizeBoardName(boardName);
     
     console.log(`Deleting board: ${boardName} (sanitized to: ${safeBoardName})`);
     
