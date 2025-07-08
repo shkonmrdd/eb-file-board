@@ -144,7 +144,7 @@ docker run -p 3001:3001 -v /path/to/your/files:/data/files eb-file-board
 JWT_SECRET=your-super-secret-minimum-32-characters
 
 # Optional
-PORT=3001                           # Server port (default: 3001)
+PORT=3001                          # Server port (default: 3001)
 HOST=127.0.0.1                     # Server bind address (default: 127.0.0.1)
 BROWSER_TOKEN_EXPIRES_IN=365d      # JWT lifetime (default: 365d)
 CORS_ORIGINS=http://localhost:3001 # Comma-separated CORS origins
