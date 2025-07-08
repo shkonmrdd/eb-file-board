@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { LogOut, FileText, RefreshCw, Plus, Trash2 } from 'lucide-react';
+import { LogOut, FileText, RefreshCw, Plus } from 'lucide-react';
 import FileTree from './FileTree';
 import ConfirmationModal from './ConfirmationModal';
 import { useFileTreeStore } from '../store/fileTreeStore';
@@ -18,6 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout, onNewBoard })
   const { removeBoard } = useBoardStore();
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [boardToDelete, setBoardToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch file tree when component mounts
@@ -33,24 +34,32 @@ const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout, onNewBoard })
     }
   };
 
+  const handleBoardDeleteRequest = (boardName: string) => {
+    setBoardToDelete(boardName);
+    setShowDeleteModal(true);
+  };
+
   const handleDeleteBoard = async () => {
-    if (!currentBoard) return;
+    if (!boardToDelete) return;
     
     setIsDeleting(true);
     try {
-      await deleteBoard(currentBoard);
+      await deleteBoard(boardToDelete);
       
       // Clean up board state from store
-      removeBoard(currentBoard);
+      removeBoard(boardToDelete);
       
       // Close modal
       setShowDeleteModal(false);
+      setBoardToDelete(null);
       
       // Refresh file tree to reflect deletion
       await fetchFileTree();
       
-      // Navigate to main board since current board was deleted
-      navigate('/');
+      // Navigate to main board if we deleted the current board
+      if (boardToDelete === currentBoard) {
+        navigate('/');
+      }
       
     } catch (error) {
       console.error('Failed to delete board:', error);
@@ -60,7 +69,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout, onNewBoard })
     }
   };
 
-  const canDeleteCurrentBoard = currentBoard && currentBoard !== 'main';
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setBoardToDelete(null);
+  };
 
   return (
     <div className="w-64 bg-gray-50 dark:bg-[#232329] border-r border-gray-200 dark:border-[#38383f] flex flex-col">
@@ -79,15 +91,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout, onNewBoard })
                 title="New board"
               >
                 <Plus className="w-4 h-4" />
-              </button>
-            )}
-            {canDeleteCurrentBoard && (
-              <button
-                onClick={() => setShowDeleteModal(true)}
-                className="p-1 rounded-md bg-transparent border-none cursor-pointer text-gray-600 dark:text-gray-400 hover:bg-red-100 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                title={`Delete board: ${currentBoard}`}
-              >
-                <Trash2 className="w-4 h-4" />
               </button>
             )}
             <button
@@ -115,6 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout, onNewBoard })
               height="100%"
               currentBoard={currentBoard}
               onBoardSelect={handleBoardSelect}
+              onBoardDelete={handleBoardDeleteRequest}
             />
           )}
         </div>
@@ -137,11 +141,11 @@ const Sidebar: React.FC<SidebarProps> = ({ currentBoard, onLogout, onNewBoard })
       <ConfirmationModal
         isOpen={showDeleteModal}
         title="Delete Board"
-        message={`Are you sure you want to delete the board "${currentBoard}"? This will permanently delete the entire folder and all its contents. This action cannot be undone.`}
+        message={`Are you sure you want to delete the board "${boardToDelete}"? This will permanently delete the entire folder and all its contents. This action cannot be undone.`}
         confirmText="Delete Board"
         cancelText="Cancel"
         onConfirm={handleDeleteBoard}
-        onCancel={() => setShowDeleteModal(false)}
+        onCancel={handleCancelDelete}
         isDestructive={true}
         isLoading={isDeleting}
       />
