@@ -23,7 +23,7 @@ EB File Board is a **single-user visual workspace** built on top of [Excalidraw]
 
 **⚠️ EXPERIMENTAL**: This software is currently in experimental stage. Features may change and data loss is possible.
 
-**⚠️ Security Notice**: Uses plain HTTP without TLS encryption. Traffic is unencrypted over the network. Files are stored "as is" too. Best suited for localhost use — LAN usage is at your discretion based on your network trust level.
+**⚠️ Security Notice**: Uses plain HTTP without TLS encryption. Traffic is unencrypted over the network. Files are stored "as is" too. Best suited for localhost use — LAN usage is at your discretion based on your network trust level. Do not expose it to the Internet.
 
 ### Perfect for:
 - **Personal brainstorming** with embedded research documents
