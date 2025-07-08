@@ -228,6 +228,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Excalidraw](https://excalidraw.com/) for the amazing drawing engine and the board
 - [PDF.js](https://mozilla.github.io/pdf.js/) for PDF rendering
 - [React Markdown Editor](https://github.com/uiwjs/react-markdown-editor) for markdown editing
+- All other open source libraries listed in the frontend [package.json](frontend/package.json) and backend [package.json](backend/package.json) files
 
 ---
 
