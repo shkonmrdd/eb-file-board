@@ -23,7 +23,7 @@ EB File Board is a **single-user visual workspace** built on top of [Excalidraw]
 
 **⚠️ EXPERIMENTAL**: This software is currently in experimental stage. Features may change and data loss is possible.
 
-**⚠️ Security Notice**: Uses plain HTTP without TLS encryption. Traffic is unencrypted over the network. Files are stored "as is" too. Best suited for localhost use — LAN usage is at your discretion based on your network trust level. Do not expose it to the Internet.
+**⚠️ Security Notice**: Traffic is unencrypted over the network. Files are stored "as is" too. Best suited for localhost use — LAN usage is at your discretion based on your network trust level. Do not expose it to the Internet.
 
 ### Perfect for:
 - **Personal brainstorming** with embedded research documents
@@ -98,7 +98,7 @@ npm run dev
 ```
 
 ### 4. First Login
-1. Check the backend console for the **INITIAL LOGIN TOKEN**
+1. Check the backend console for the **BOOTSTRAP TOKEN**
 2. Use this token to log in from your browser
 3. Save this token - you'll need it for future logins
 
@@ -112,7 +112,7 @@ docker run -p 3001:3001 -v ./files:/data/files ai-file-board
 ## How to Use
 
 ### Creating Your First Board
-1. **Log in** with the initial bootstrap token
+1. **Log in** with the bootstrap token
 2. **Create files** using the file creation buttons
 3. **Drag files** onto the canvas to embed them
 4. **Draw and annotate** around your embedded files
