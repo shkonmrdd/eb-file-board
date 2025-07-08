@@ -19,7 +19,7 @@
 </div>
 
 
-EB File Board is a **single-user visual workspace** built on top of [Excalidraw](https://github.com/excalidraw/excalidraw) that combines infinite canvas drawing with file viewing and editing features. Think of it as a personal digital whiteboard where you can sketch ideas, embed documents, and organize your project files - all in one intuitive interface.
+EB File Board is a **web-based single-user visual workspace** built on top of [Excalidraw](https://github.com/excalidraw/excalidraw) that combines infinite canvas drawing with file viewing and editing features. Think of it as a personal digital whiteboard where you can sketch ideas, embed documents, and organize your project files - all in one intuitive browser interface.
 
 **⚠️ EXPERIMENTAL**: This software is currently in experimental stage. Features may change and data loss is possible.
 
