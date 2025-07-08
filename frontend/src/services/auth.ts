@@ -19,6 +19,14 @@ interface UserResponse {
   isAuthenticated: boolean;
 }
 
+export interface LoginResult {
+  success: boolean;
+  error?: {
+    status?: number;
+    message: string;
+  };
+}
+
 export const getJwtToken = (): string | null => {
   return localStorage.getItem(JWT_TOKEN_KEY);
 };
@@ -45,7 +53,7 @@ export const getAuthHeaders = (): Record<string, string> => {
   return {};
 };
 
-export const login = async (initialToken: string): Promise<boolean> => {
+export const login = async (initialToken: string): Promise<LoginResult> => {
   try {
     console.log('Attempting to login with initial token');
     const response = await authApi.post<AuthResponse>('/auth/login', { token: initialToken });
@@ -53,12 +61,35 @@ export const login = async (initialToken: string): Promise<boolean> => {
     if (response.data && response.data.token) {
       console.log('Login successful, JWT received');
       setJwtToken(response.data.token);
-      return true;
+      return { success: true };
     }
-    return false;
+    return { 
+      success: false, 
+      error: { message: 'Login failed: Invalid response from server' } 
+    };
   } catch (error) {
     console.error('Login failed:', error);
-    return false;
+    
+    if (axios.isAxiosError(error) && error.response) {
+      const status = error.response.status;
+      let message = 'Login failed';
+      
+      if (status === 401) {
+        message = 'Bootstrap token likely expired. Please get a new token from Docker logs.';
+      } else {
+        message = 'There was an error during login. Please try again.';
+      }
+      
+      return { 
+        success: false, 
+        error: { status, message } 
+      };
+    }
+    
+    return { 
+      success: false, 
+      error: { message: 'Network error. Please check your connection and try again.' } 
+    };
   }
 };
 

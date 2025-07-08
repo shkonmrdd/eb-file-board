@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Lock, Unlock } from 'lucide-react';
+import type { LoginResult } from '../services/auth';
 
 interface LoginFormProps {
-  onLogin: (token: string) => void;
+  onLogin: (token: string) => Promise<LoginResult>;
   isLoading?: boolean;
 }
 
@@ -10,7 +11,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, isLoading = false }) => 
   const [token, setToken] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token.trim()) {
       setError('Please enter your token');
@@ -18,7 +19,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, isLoading = false }) => 
     }
 
     setError('');
-    onLogin(token);
+    
+    try {
+      const result = await onLogin(token);
+      
+      if (!result.success && result.error) {
+        setError(result.error.message);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('An unexpected error occurred. Please try again.');
+    }
   };
 
   return (

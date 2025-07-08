@@ -5,6 +5,7 @@ import {
   login as apiLogin,
   logout as apiLogout,
   setJwtToken,
+  type LoginResult,
 } from '../services/auth';
 import { connectSocket } from '../socket';
 
@@ -15,7 +16,7 @@ interface AuthState {
 
   // Actions
   initialize: () => Promise<void>;
-  login: (token: string) => Promise<boolean>;
+  login: (token: string) => Promise<LoginResult>;
   logout: () => Promise<void>;
 }
 
@@ -52,20 +53,23 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ isLoginAttempting: true });
     try {
       setJwtToken(token);
-      const loginSuccess = await apiLogin(token);
+      const result = await apiLogin(token);
 
-      set({ isAuthenticated: loginSuccess });
-
-      if (loginSuccess) {
+      if (result.success) {
+        set({ isAuthenticated: true });
         connectSocket(); // Connect WebSocket after successful login
-        return true;
       } else {
-        console.log('Login with provided token failed');
-        return false;
+        set({ isAuthenticated: false });
       }
+
+      return result;
     } catch (error) {
       console.error('Login failed:', error);
-      return false;
+      set({ isAuthenticated: false });
+      return { 
+        success: false, 
+        error: { message: 'Unexpected error during login' } 
+      };
     } finally {
       set({ isLoginAttempting: false });
     }
