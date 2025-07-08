@@ -106,7 +106,12 @@ npm run dev
 ```bash
 # Build and run with Docker
 docker build -t eb-file-board .
+
+# Run with file persistence (./files = current directory's files folder)
 docker run -p 3001:3001 -v ./files:/data/files eb-file-board
+
+# Or with absolute path
+docker run -p 3001:3001 -v /path/to/your/files:/data/files eb-file-board
 ```
 
 ## How to Use
