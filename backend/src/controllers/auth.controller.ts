@@ -21,7 +21,7 @@ export class AuthController {
         return;
       }
       
-      // Generate a new JWT for the user
+      // Generate a new JWT for the device valid for ~365 days
       const jwt = generateToken();
       
       // Set token in cookie and return in response

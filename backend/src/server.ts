@@ -62,7 +62,6 @@ httpServer.listen({
   
   log("JWT Authentication is enabled.");
   log(`For initial setup, use INITIAL LOGIN TOKEN`);
-  log("After login, your browser will receive a JWT that does not expire.");
 });
 
 process.on('SIGINT', () => {

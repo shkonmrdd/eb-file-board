@@ -23,7 +23,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, isLoading = false }) => 
 
   return (
     <div className="w-screen h-screen flex justify-center items-center bg-[#ECECF4] dark:bg-gray-900">
-      <div className="w-full max-w-xs p-8 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 transition-all duration-300">
+      <div className="w-full max-w-sm p-8 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 transition-all duration-300">
         <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white text-center">
           EB File Board
         </h2>
@@ -48,7 +48,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, isLoading = false }) => 
               value={token}
               onChange={(e) => setToken(e.target.value)}
               className="w-full px-4 py-3 text-gray-800 dark:text-white bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition-all duration-200"
-              placeholder="Enter your secure token"
+              placeholder="Enter your bootstrap token"
               disabled={isLoading}
             />
           </div>
@@ -56,7 +56,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, isLoading = false }) => 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 px-4 text-black font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 px-4 text-black font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             style={{ backgroundColor: '#ECECF4' }} // Tailwind didn't work here
           >
             <span className="flex items-center justify-center">
@@ -71,7 +71,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, isLoading = false }) => 
         </form>
 
         <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
-          Copy it from the Docker logs.
+          Copy it from the Docker logs. <br></br>
+          <span className=" text-gray-300 dark:text-gray-600">
+            (Expires in 15 minutes)
+          </span>
         </p>
       </div>
     </div>

@@ -69,11 +69,6 @@ const extractToken = (req: Request): string | null => {
     return req.cookies.token;
   }
   
-  // Check for token in query parameters (less secure, but useful for WebSocket)
-  if (req.query && req.query.token) {
-    return req.query.token as string;
-  }
-  
   return null;
 };
 
@@ -87,8 +82,7 @@ export const authenticateSocketJWT = (socket: any, next: (err?: Error) => void):
       socket.handshake.auth.token ||
       (socket.handshake.headers.authorization?.startsWith('Bearer ') 
         ? socket.handshake.headers.authorization.substring(7) 
-        : null) ||
-      socket.handshake.query?.token;
+        : null);
     
     if (!token) {
       log('Socket authentication failed: No token provided');

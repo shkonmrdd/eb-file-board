@@ -9,6 +9,8 @@ import fs from "fs";
 import { authenticateJWT } from "./middleware/jwt.middleware";
 import authRoutes from "./routes/auth.routes";
 import { getCorsOrigins } from "./utils";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 
 const app = express();
 
@@ -39,6 +41,16 @@ app.use(config.uploadsRoute, authenticateJWT);
 // 5. Serve static files and set up routes
 app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(config.uploadsRoute, express.static(config.uploadsPath));
+
+app.use(helmet());
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
 
 app.use((req, res, next) => {
   log(`Route accessed: ${req.url}`);
