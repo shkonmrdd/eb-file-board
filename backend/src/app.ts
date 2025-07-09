@@ -8,7 +8,7 @@ import path from "path";
 import fs from "fs";
 import { authenticateJWT } from "./middleware/jwt.middleware";
 import authRoutes from "./routes/auth.routes";
-import { getCorsOrigins } from "./utils";
+import { getCorsOrigins, sanitizeBoardName } from "./utils";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 
@@ -185,6 +185,80 @@ app.get("/api/files", (req, res) => {
   } catch (error) {
     log(`Error fetching complete file tree: ${error}`);
     res.status(500).json({ files: [] });
+  }
+});
+
+// Delete a board and all its contents
+app.delete("/api/boards/:boardName", (req, res): void => {
+  try {
+    const { boardName } = req.params;
+
+    // Validate input
+    if (!boardName || typeof boardName !== 'string') {
+      log("Board deletion failed: Invalid board name");
+      res.status(400).json({ message: "Invalid board name provided" });
+      return;
+    }
+
+    // Sanitize board name to prevent path traversal attacks
+    const safeBoardName = sanitizeBoardName(boardName);
+
+    // Additional security: ensure board name doesn't contain path traversal attempts
+    if (safeBoardName.includes('..') || safeBoardName.includes('/') || safeBoardName.includes('\\')) {
+      log(`Board deletion failed: Potential path traversal attempt with board name: ${boardName}`);
+      res.status(400).json({ message: "Invalid board name" });
+      return;
+    }
+
+    // Prevent deletion of empty names or just underscores
+    if (!safeBoardName || safeBoardName.trim() === '' || /^_+$/.test(safeBoardName)) {
+      log(`Board deletion failed: Invalid sanitized board name: ${safeBoardName}`);
+      res.status(400).json({ message: "Invalid board name" });
+      return;
+    }
+
+    // Construct the board directory path
+    const boardDir = path.join(config.uploadsPath, safeBoardName);
+
+    // Security check: ensure the resolved path is within uploads directory
+    const uploadsResolvedPath = path.resolve(config.uploadsPath);
+    const boardResolvedPath = path.resolve(boardDir);
+
+    if (!boardResolvedPath.startsWith(uploadsResolvedPath + path.sep) && boardResolvedPath !== uploadsResolvedPath) {
+      log(`Board deletion failed: Path traversal attempt detected. Board path: ${boardResolvedPath}, Uploads path: ${uploadsResolvedPath}`);
+      res.status(400).json({ message: "Invalid board path" });
+      return;
+    }
+
+    // Check if board directory exists
+    if (!fs.existsSync(boardDir)) {
+      log(`Board deletion failed: Board '${safeBoardName}' does not exist`);
+      res.status(404).json({ message: "Board not found" });
+      return;
+    }
+
+    // Verify it's actually a directory
+    const stat = fs.statSync(boardDir);
+    if (!stat.isDirectory()) {
+      log(`Board deletion failed: '${safeBoardName}' is not a directory`);
+      res.status(400).json({ message: "Invalid board" });
+      return;
+    }
+
+    // Delete the board directory and all its contents recursively
+    fs.rmSync(boardDir, { recursive: true, force: true });
+
+
+    log(`Board '${safeBoardName}' deleted successfully by user ${req.user?.userId || 'unknown'}`);
+
+    res.json({ 
+      message: "Board deleted successfully",
+      boardName: safeBoardName 
+    });
+
+  } catch (error) {
+    log(`Error deleting board: ${error}`);
+    res.status(500).json({ message: "Failed to delete board" });
   }
 });
 
