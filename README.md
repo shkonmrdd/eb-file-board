@@ -204,9 +204,9 @@ eb-file-board/
 ## Future Roadmap
 
 ### Next Steps
-- [ ] **Board deletion functionality** - delete boards you no longer need
+- [x] **Board deletion functionality** - delete boards you no longer need
+- [ ] **File deletion functionality** - allow deleting files from the filesystem (currently only removes them from the board)
 - [ ] **Bi-directional file sync** - board changes reflect to filesystem and vice versa via WebSocket
-
 - [ ] **Enhanced file support** - more file types beyond current set
 - [ ] **Export functionality** - save boards as images/PDFs with baked in file previews; currently it only exports the board's data without the document contents.
 - [ ] **Mobile** improvements
