@@ -1,0 +1,1 @@
+export const sanitizeBoardName = (boardName: string): string => boardName.replace(/[^a-z0-9\-]/gi, '_'); 

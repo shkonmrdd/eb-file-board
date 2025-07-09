@@ -1,6 +1,6 @@
 import * as fs from "fs/promises";
 import path from "path";
-import { log } from "../utils";
+import { log, sanitizeBoardName } from "../utils";
 import { config } from "../config";
 
 interface FileUpdatePayload {
@@ -22,7 +22,7 @@ export const handleFileUpdate = async ({
     const pathSegments = pathWithoutPrefix.split('/').filter(Boolean);
     if (pathSegments.length > 0) {
       // Only sanitize the first segment (boardName)
-      pathSegments[0] = pathSegments[0].replace(/[^a-z0-9\-]/gi, '_');
+      pathSegments[0] = sanitizeBoardName(pathSegments[0]);
     }
     const sanitizedPath = pathSegments.join('/');
     
@@ -57,7 +57,7 @@ export const handleStateUpdate = async (
   try {
     const { board, boardName } = payload;
     // Sanitize board name to prevent directory traversal and ensure consistency with file uploads
-    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    const safeBoardName = sanitizeBoardName(boardName);
     const boardPath = path.join(config.uploadsPath, safeBoardName, `board.json`);
 
     // Ensure the directory exists

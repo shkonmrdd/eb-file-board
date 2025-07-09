@@ -88,7 +88,7 @@ app.get("/api/files/:boardName", (req, res) => {
   try {
     const { boardName } = req.params;
     // Sanitize board name to match backend convention (only alphanumeric + dash)
-    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    const safeBoardName = sanitizeBoardName(boardName);
 
     const boardDir = path.join(config.uploadsPath, safeBoardName);
 
@@ -271,7 +271,7 @@ app.post("/upload", upload.single("file"), (req, res): void => {
   }
 
 
-  const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+  const safeBoardName = sanitizeBoardName(boardName);
   
   const boardPath = path.join(config.uploadsPath, safeBoardName);
   fs.mkdirSync(boardPath, { recursive: true });
