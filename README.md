@@ -198,7 +198,6 @@ eb-file-board/
 **Deployment**: Designed for personal/localhost use  
 **Version History**: No file version tracking (planned feature)  
 **Mobile**: Optimized for desktop use  
-**Board Management**: No board deletion functionality yet (next priority)  
 **File Sync**: One-way sync (board changes don't reflect to filesystem - planned improvement)  
 
 ## Future Roadmap
