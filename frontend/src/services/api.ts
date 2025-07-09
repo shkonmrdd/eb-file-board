@@ -99,3 +99,13 @@ export const getCompleteFileTree = async (): Promise<FileTreeNode[]> => {
     return [];
   }
 };
+
+export const deleteBoard = async (boardName: string): Promise<void> => {
+  try {
+    const safeBoardName = boardName.replace(/[^a-z0-9\-]/gi, '_');
+    await api.delete(`/api/boards/${safeBoardName}`);
+  } catch (error) {
+    console.error('Error deleting board:', error);
+    throw error;
+  }
+};
