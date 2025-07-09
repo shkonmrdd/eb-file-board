@@ -192,14 +192,12 @@ app.delete("/api/boards/:boardName", (req, res): void => {
   try {
     const { boardName } = req.params;
 
-    // Validate input
     if (!boardName || typeof boardName !== 'string') {
       log("Board deletion failed: Invalid board name");
       res.status(400).json({ message: "Invalid board name provided" });
       return;
     }
 
-    // Sanitize board name to prevent path traversal attacks
     const safeBoardName = sanitizeBoardName(boardName);
 
     // Additional security: ensure board name doesn't contain path traversal attempts
@@ -216,7 +214,6 @@ app.delete("/api/boards/:boardName", (req, res): void => {
       return;
     }
 
-    // Construct the board directory path
     const boardDir = path.join(config.uploadsPath, safeBoardName);
 
     // Security check: ensure the resolved path is within uploads directory
@@ -229,14 +226,12 @@ app.delete("/api/boards/:boardName", (req, res): void => {
       return;
     }
 
-    // Check if board directory exists
     if (!fs.existsSync(boardDir)) {
       log(`Board deletion failed: Board '${safeBoardName}' does not exist`);
       res.status(404).json({ message: "Board not found" });
       return;
     }
 
-    // Verify it's actually a directory
     const stat = fs.statSync(boardDir);
     if (!stat.isDirectory()) {
       log(`Board deletion failed: '${safeBoardName}' is not a directory`);
@@ -244,9 +239,7 @@ app.delete("/api/boards/:boardName", (req, res): void => {
       return;
     }
 
-    // Delete the board directory and all its contents recursively
     fs.rmSync(boardDir, { recursive: true, force: true });
-
 
     log(`Board '${safeBoardName}' deleted successfully by user ${req.user?.userId || 'unknown'}`);
 
@@ -270,7 +263,6 @@ app.post("/upload", upload.single("file"), (req, res): void => {
     return;
   }
 
-  // Get board name from the request body
   const boardName = req.body.boardName;
   if (!boardName) {
     log("No board name provided");
