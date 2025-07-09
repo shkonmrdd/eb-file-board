@@ -188,7 +188,6 @@ app.get("/api/files", (req, res) => {
   }
 });
 
-// Delete a board and all its contents
 app.delete("/api/boards/:boardName", (req, res): void => {
   try {
     const { boardName } = req.params;
