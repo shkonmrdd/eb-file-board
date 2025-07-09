@@ -168,11 +168,15 @@ const FileTree: React.FC<FileTreeProps> = ({ data, height = '100%', currentBoard
       setIsModalOpen(false);
       setBoardToDelete(null);
       
-      // Navigate to root (main board) after successful deletion
-      navigate('/');
-      
-      // Trigger refresh after navigation is complete
-      setShouldRefreshAfterNavigation(true);
+      // Only navigate to root if we're deleting the currently selected board
+      if (boardToDelete === currentBoard) {
+        navigate('/');
+        // Trigger refresh after navigation is complete
+        setShouldRefreshAfterNavigation(true);
+      } else {
+        // Just refresh the tree without navigation
+        fetchFileTree();
+      }
       
       // Also call the prop callback if provided
       onTreeUpdate?.();
